@@ -46,6 +46,7 @@ class LegalProvision(BaseModel):
     jurisdiction: str = Field(default="Central", description="Central or State jurisdiction.")
     year: Optional[int] = Field(None, description="Year of enactment.")
     domain: LegalDomain = Field(default=LegalDomain.GENERAL_DISPUTE, description="Primary legal dispute domain.")
+    act_category: Optional[str] = Field(default=None, description="Broad category: criminal, civil, consumer, traffic.")
 
 
 class LegalPrecedent(BaseModel):
@@ -78,6 +79,7 @@ class RetrievedContext(BaseModel):
     act_name: Optional[str] = None
     court: Optional[str] = None
     domain: LegalDomain = LegalDomain.GENERAL_DISPUTE
+    act_category: Optional[str] = None
 
 
 class ProceduralActionStep(BaseModel):

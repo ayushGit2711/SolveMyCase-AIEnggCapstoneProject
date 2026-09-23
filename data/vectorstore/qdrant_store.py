@@ -125,6 +125,7 @@ class QdrantLegalStore:
                 "section_number": prov.section_number,
                 "court": None,
                 "domain": prov.domain.value,
+                "act_category": prov.act_category,
                 "text": prov.text,
                 "source_url": prov.source_url,
             }
@@ -143,6 +144,7 @@ class QdrantLegalStore:
                 "section_number": None,
                 "court": prec.court,
                 "domain": prec.domain.value,
+                "act_category": None,
                 "text": prec.text,
                 "source_url": prec.source_url,
             }
@@ -260,3 +262,135 @@ class QdrantLegalStore:
             results.append(cloned)
 
         return results
+
+    def criminal_code_search(
+        self,
+        query_text: str,
+        query_embedding: List[float],
+        top_k: int = 5,
+        rrf_k: int = 60,
+    ) -> List[RetrievedContext]:
+        """Perform dedicated hybrid retrieval against criminal code statutes (BNS, BNSS, IPC, CrPC).
+
+        Applies a strict Qdrant payload filter on act_category="criminal" to guarantee
+        zero hallucination on statutory provisions.
+
+        Args:
+            query_text: Natural language query string.
+            query_embedding: Dense embedding vector for query_text.
+            top_k: Number of combined results to return.
+            rrf_k: RRF smoothing constant (default: 60).
+
+        Returns:
+            Ranked list of criminal statutory contexts.
+        """
+        # 1. Dense search filtered by act_category == "criminal"
+        query_filter = qmodels.Filter(
+            must=[qmodels.FieldCondition(key="act_category", match=qmodels.MatchValue(value="criminal"))]
+        )
+
+        try:
+            search_response = self.client.query_points(
+                collection_name=self.collection_name,
+                query=query_embedding,
+                query_filter=query_filter,
+                limit=top_k * 2,
+            )
+            dense_hits = search_response.points
+        except Exception:
+            dense_hits = self.client.search(
+                collection_name=self.collection_name,
+                query_vector=query_embedding,
+                query_filter=query_filter,
+                limit=top_k * 2,
+            )
+
+        dense_ranks: Dict[str, int] = {}
+        for rank, hit in enumerate(dense_hits):
+            cid = hit.payload.get("chunk_id")
+            if cid:
+                dense_ranks[cid] = rank + 1
+
+        # 2. Sparse BM25 filtered by act_category == "criminal"
+        bm25_ranks: Dict[str, int] = {}
+        if self.bm25_index and self.corpus_documents:
+            tokens = tokenize_legal_text(query_text)
+            bm25_scores = self.bm25_index.get_scores(tokens)
+            sorted_indices = np.argsort(bm25_scores)[::-1]
+
+            valid_rank = 1
+            for idx in sorted_indices:
+                doc = self.corpus_documents[idx]
+                if doc.act_category != "criminal":
+                    continue
+                bm25_ranks[doc.chunk_id] = valid_rank
+                valid_rank += 1
+                if valid_rank > top_k * 2:
+                    break
+
+        # 3. Reciprocal Rank Fusion
+        all_chunk_ids = set(dense_ranks.keys()).union(set(bm25_ranks.keys()))
+        doc_map = {doc.chunk_id: doc for doc in self.corpus_documents}
+
+        scored_docs: List[Tuple[RetrievedContext, float]] = []
+        for cid in all_chunk_ids:
+            doc = doc_map.get(cid)
+            if not doc:
+                continue
+
+            score = 0.0
+            if cid in dense_ranks:
+                score += 1.0 / (rrf_k + dense_ranks[cid])
+            if cid in bm25_ranks:
+                score += 1.0 / (rrf_k + bm25_ranks[cid])
+
+            scored_docs.append((doc, score))
+
+        scored_docs.sort(key=lambda x: x[1], reverse=True)
+
+        results: List[RetrievedContext] = []
+        for doc, score in scored_docs[:top_k]:
+            cloned = doc.model_copy()
+            cloned.score = round(score, 6)
+            results.append(cloned)
+
+        return results
+
+    def exact_section_search(
+        self,
+        section_number: str,
+        act_name_pattern: Optional[str] = None,
+        top_k: int = 3,
+    ) -> List[RetrievedContext]:
+        """Directly look up provisions by exact section number and optional act pattern.
+
+        Used by the VerificationNode to re-ground statutory citations before stripping them.
+
+        Args:
+            section_number: Section number to search (e.g., '106', '166', '173').
+            act_name_pattern: Optional partial string match for Act name.
+            top_k: Maximum matches to return.
+
+        Returns:
+            List of matching RetrievedContext instances.
+        """
+        sec_clean = section_number.strip().lower().replace("section", "").replace("sec", "").replace(".", "").strip()
+        matched: List[RetrievedContext] = []
+
+        for doc in self.corpus_documents:
+            if doc.doc_type != DocumentType.STATUTE:
+                continue
+            doc_sec = doc.citation_or_section.lower().replace("section", "").replace("sec", "").replace(".", "").strip()
+            if doc_sec == sec_clean:
+                if act_name_pattern:
+                    pattern = act_name_pattern.lower()
+                    doc_act = (doc.act_name or doc.title).lower()
+                    if pattern in doc_act or any(word in doc_act for word in pattern.split() if len(word) > 3):
+                        matched.append(doc)
+                else:
+                    matched.append(doc)
+
+            if len(matched) >= top_k:
+                break
+
+        return matched

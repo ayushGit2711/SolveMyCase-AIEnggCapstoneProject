@@ -33,6 +33,24 @@ TARGET_ACTS: Dict[str, LegalDomain] = {
     "consumer protection act": LegalDomain.CONSUMER_RIGHTS,
 }
 
+
+def classify_act_category(act_name: str) -> str:
+    """Classify an Act into broad procedural categories for targeted RAG retrieval.
+    
+    Returns 'criminal', 'traffic', 'consumer', 'civil', or 'general'.
+    """
+    name = act_name.lower()
+    if any(k in name for k in ["bharatiya nyaya", "bharatiya nagarik", "penal code", "criminal procedure"]):
+        return "criminal"
+    if any(k in name for k in ["motor vehicles", "motor vehicle"]):
+        return "traffic"
+    if any(k in name for k in ["consumer protection"]):
+        return "consumer"
+    if any(k in name for k in ["transfer of property", "specific relief", "civil procedure"]):
+        return "civil"
+    return "general"
+
+
 # Curated landmark precedents with authentic SC/HC citations and official government / court sources
 CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
     # Motor Vehicle Accidents
@@ -168,6 +186,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "traffic",
     },
     {
         "doc_id": "central_mva_1988_sec_166",
@@ -184,6 +203,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "traffic",
     },
     {
         "doc_id": "central_mva_1988_sec_161",
@@ -199,6 +219,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "traffic",
     },
     # Bharatiya Nyaya Sanhita, 2023
     {
@@ -216,6 +237,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
     },
     {
         "doc_id": "central_bns_2023_sec_281",
@@ -230,6 +252,37 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
+    },
+    {
+        "doc_id": "central_bns_2023_sec_324",
+        "act_name": "Bharatiya Nyaya Sanhita, 2023",
+        "section_number": "324",
+        "title": "Mischief causing damage to property",
+        "text": (
+            "Whoever commits mischief by doing any act which causes, or which he knows to be likely to cause, a diminution of the supply of water or damage to property "
+            "shall be punished with imprisonment of either description for a term which may extend to five years, or with fine, or with both."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/20062",
+        "jurisdiction": "Central",
+        "year": 2023,
+        "domain": LegalDomain.PROPERTY_CONFLICT,
+        "act_category": "criminal",
+    },
+    {
+        "doc_id": "central_bns_2023_sec_318",
+        "act_name": "Bharatiya Nyaya Sanhita, 2023",
+        "section_number": "318",
+        "title": "Cheating and dishonestly inducing delivery of property",
+        "text": (
+            "Whoever cheats and thereby dishonestly induces the person deceived to deliver any property to any person, or to make, alter or destroy the whole or any part of a valuable security, "
+            "shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/20062",
+        "jurisdiction": "Central",
+        "year": 2023,
+        "domain": LegalDomain.CONSUMER_RIGHTS,
+        "act_category": "criminal",
     },
     # Bharatiya Nagarik Suraksha Sanhita, 2023
     {
@@ -245,6 +298,85 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
+    },
+    {
+        "doc_id": "central_bnss_2023_sec_193",
+        "act_name": "Bharatiya Nagarik Suraksha Sanhita, 2023",
+        "section_number": "193",
+        "title": "Report of police officer on completion of investigation (Chargesheet)",
+        "text": (
+            "Every investigation under this Chapter shall be completed without unnecessary delay. As soon as it is completed, the officer in charge of the police station shall forward "
+            "to a Magistrate empowered to take cognizance of the offence on a police report, a report in the form prescribed by the State Government, setting forth the names of parties, "
+            "nature of information, and whether any offence appears to have been committed."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/20063",
+        "jurisdiction": "Central",
+        "year": 2023,
+        "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
+    },
+    {
+        "doc_id": "central_bnss_2023_sec_480",
+        "act_name": "Bharatiya Nagarik Suraksha Sanhita, 2023",
+        "section_number": "480",
+        "title": "When bail may be taken in case of non-bailable offence",
+        "text": (
+            "When any person accused of, or suspected of, the commission of any non-bailable offence is arrested or detained without warrant by an officer in charge of a police station "
+            "or appears or is brought before a Court, he may be released on bail, but he shall not be so released if there appear reasonable grounds for believing that he has been guilty of an offence punishable with death or imprisonment for life."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/20063",
+        "jurisdiction": "Central",
+        "year": 2023,
+        "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
+    },
+    # Indian Penal Code, 1860 (Legacy reference)
+    {
+        "doc_id": "central_ipc_1860_sec_279",
+        "act_name": "Indian Penal Code, 1860",
+        "section_number": "279",
+        "title": "Rash driving or riding on a public way",
+        "text": (
+            "Whoever drives any vehicle, or rides, on any public way in a manner so rash or negligent as to endanger human life, or to be likely to cause hurt or injury to any other person, "
+            "shall be punished with imprisonment of either description for a term which may extend to six months, or with fine which may extend to one thousand rupees, or with both."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/2263",
+        "jurisdiction": "Central",
+        "year": 1860,
+        "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
+    },
+    {
+        "doc_id": "central_ipc_1860_sec_304a",
+        "act_name": "Indian Penal Code, 1860",
+        "section_number": "304A",
+        "title": "Causing death by negligence",
+        "text": (
+            "Whoever causes the death of any person by doing any rash or negligent act not amounting to culpable homicide, shall be punished with "
+            "imprisonment of either description for a term which may extend to two years, or with fine, or with both."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/2263",
+        "jurisdiction": "Central",
+        "year": 1860,
+        "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
+    },
+    # Code of Criminal Procedure, 1973 (Legacy reference)
+    {
+        "doc_id": "central_crpc_1973_sec_154",
+        "act_name": "Code of Criminal Procedure, 1973",
+        "section_number": "154",
+        "title": "Information in cognizable cases (First Information Report)",
+        "text": (
+            "Every information relating to the commission of a cognizable offence, if given orally to an officer in charge of a police station, shall be reduced to writing by him or under his direction, "
+            "and be read over to the informant; and every such information, whether given in writing or reduced to writing as aforesaid, shall be signed by the person giving it."
+        ),
+        "source_url": "https://www.indiacode.nic.in/handle/123456789/1611",
+        "jurisdiction": "Central",
+        "year": 1973,
+        "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "act_category": "criminal",
     },
     # Transfer of Property Act, 1882
     {
@@ -261,6 +393,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
+        "act_category": "civil",
     },
     {
         "doc_id": "central_tpa_1882_sec_106",
@@ -276,6 +409,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
+        "act_category": "civil",
     },
     # Specific Relief Act, 1963
     {
@@ -291,6 +425,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1963,
         "domain": LegalDomain.PROPERTY_CONFLICT,
+        "act_category": "civil",
     },
     {
         "doc_id": "central_sra_1963_sec_38",
@@ -305,6 +440,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 1963,
         "domain": LegalDomain.PROPERTY_CONFLICT,
+        "act_category": "civil",
     },
     # Consumer Protection Act, 2019
     {
@@ -321,6 +457,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
+        "act_category": "consumer",
     },
     {
         "doc_id": "central_cpa_2019_sec_35",
@@ -336,6 +473,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
+        "act_category": "consumer",
     },
     {
         "doc_id": "central_cpa_2019_sec_84",
@@ -351,6 +489,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
+        "act_category": "consumer",
     },
 ]
 
@@ -389,7 +528,8 @@ def load_legal_provisions_from_parquet(parquet_file_path: Path) -> List[LegalPro
 
         provisions: List[LegalProvision] = []
         for row in rows:
-            act_lower = str(row[1]).lower()
+            act_name_str = str(row[1])
+            act_lower = act_name_str.lower()
             # Ignore repealed acts
             if "(rep." in act_lower or "repealed" in act_lower:
                 continue
@@ -408,10 +548,12 @@ def load_legal_provisions_from_parquet(parquet_file_path: Path) -> List[LegalPro
                     except (ValueError, TypeError):
                         pass
 
+                category = classify_act_category(act_name_str)
+
                 provisions.append(
                     LegalProvision(
                         doc_id=str(row[0]),
-                        act_name=str(row[1]),
+                        act_name=act_name_str,
                         section_number=str(row[2]) if row[2] else "",
                         title=str(row[3]) if row[3] else None,
                         text=str(row[4]),
@@ -419,17 +561,18 @@ def load_legal_provisions_from_parquet(parquet_file_path: Path) -> List[LegalPro
                         jurisdiction="Central",
                         year=year_val,
                         domain=matched_domain,
+                        act_category=category,
                     )
                 )
 
         if provisions:
-            # Also append BNS and BNSS if not present in central parquet
-            act_names_present = {p.act_name.lower() for p in provisions}
+            # Also ensure all curated fallback provisions (especially BNS, BNSS, IPC) are present
+            doc_ids_present = {p.doc_id for p in provisions}
             for fallback in FALLBACK_PROVISIONS:
-                if fallback["act_name"].lower() not in act_names_present:
+                if fallback["doc_id"] not in doc_ids_present:
                     provisions.append(LegalProvision(**fallback))
 
-            print(f"[Normalizer] Extracted {len(provisions)} domain-specific provisions from Parquet & new criminal codes.")
+            print(f"[Normalizer] Extracted {len(provisions)} domain-specific provisions including criminal code sub-layer.")
             return provisions
 
     except Exception as err:

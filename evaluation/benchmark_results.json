@@ -1,0 +1,107 @@
+{
+  "summary": {
+    "total_scenarios": 3,
+    "baseline": {
+      "avg_latency_seconds": 0.009,
+      "avg_hallucination_rate": 0.0,
+      "avg_grounding_accuracy": 100.0,
+      "avg_completeness_score": 0.5,
+      "forum_accuracy": 66.67,
+      "avg_judge_score": 3.58
+    },
+    "proposed": {
+      "avg_latency_seconds": 0.149,
+      "avg_hallucination_rate": 0.0,
+      "avg_grounding_accuracy": 100.0,
+      "avg_completeness_score": 0.833,
+      "forum_accuracy": 100.0,
+      "avg_judge_score": 4.0
+    }
+  },
+  "results": [
+    {
+      "scenario_id": "mva_001",
+      "domain": "motor_vehicle_accident",
+      "is_legal": true,
+      "baseline": {
+        "latency_seconds": 0.0177,
+        "hallucination_rate": 0.0,
+        "grounding_accuracy": 1.0,
+        "completeness_score": 0.5,
+        "step_count": 3,
+        "forum_matched": true,
+        "judge_score": 3.75,
+        "statutory_accuracy": 1.0,
+        "hallucination_freedom": 5.0
+      },
+      "proposed": {
+        "latency_seconds": 0.1501,
+        "hallucination_rate": 0.0,
+        "grounding_accuracy": 1.0,
+        "completeness_score": 0.8333,
+        "step_count": 5,
+        "forum_matched": true,
+        "judge_score": 4.0,
+        "statutory_accuracy": 1.0,
+        "hallucination_freedom": 5.0,
+        "unverified_stripped_count": 0
+      }
+    },
+    {
+      "scenario_id": "mva_002",
+      "domain": "motor_vehicle_accident",
+      "is_legal": true,
+      "baseline": {
+        "latency_seconds": 0.005,
+        "hallucination_rate": 0.0,
+        "grounding_accuracy": 1.0,
+        "completeness_score": 0.5,
+        "step_count": 3,
+        "forum_matched": true,
+        "judge_score": 3.75,
+        "statutory_accuracy": 1.0,
+        "hallucination_freedom": 5.0
+      },
+      "proposed": {
+        "latency_seconds": 0.1503,
+        "hallucination_rate": 0.0,
+        "grounding_accuracy": 1.0,
+        "completeness_score": 0.8333,
+        "step_count": 5,
+        "forum_matched": true,
+        "judge_score": 4.0,
+        "statutory_accuracy": 1.0,
+        "hallucination_freedom": 5.0,
+        "unverified_stripped_count": 0
+      }
+    },
+    {
+      "scenario_id": "mva_003",
+      "domain": "motor_vehicle_accident",
+      "is_legal": true,
+      "baseline": {
+        "latency_seconds": 0.0051,
+        "hallucination_rate": 0.0,
+        "grounding_accuracy": 1.0,
+        "completeness_score": 0.5,
+        "step_count": 3,
+        "forum_matched": false,
+        "judge_score": 3.25,
+        "statutory_accuracy": 1.0,
+        "hallucination_freedom": 5.0
+      },
+      "proposed": {
+        "latency_seconds": 0.148,
+        "hallucination_rate": 0.0,
+        "grounding_accuracy": 1.0,
+        "completeness_score": 0.8333,
+        "step_count": 5,
+        "forum_matched": true,
+        "judge_score": 4.0,
+        "statutory_accuracy": 1.0,
+        "hallucination_freedom": 5.0,
+        "unverified_stripped_count": 0
+      }
+    }
+  ]
+}

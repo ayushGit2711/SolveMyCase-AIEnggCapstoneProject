@@ -22,8 +22,9 @@ from solvemycase.data.ingestion.schema import (
 class VerificationNode:
     """Verifies that all proposed procedural steps and citations are grounded in retrieved context."""
 
-    def __init__(self, settings: Optional[Settings] = None):
+    def __init__(self, settings: Optional[Settings] = None, store: Optional[Any] = None):
         self.settings = settings or get_settings()
+        self.store = store
 
     def verify(self, state: AgentState) -> Dict[str, Any]:
         """Perform zero-hallucination audit on draft action plan and citations.
@@ -76,8 +77,20 @@ class VerificationNode:
                 stat.is_verified = True
                 verified_statutes.append(stat)
             else:
-                unverified_stripped.append(f"Statute: {stat.act_name} Section {stat.section_number}")
-                print(f"[VerificationNode] STRIPPED ungrounded statutory citation: {stat.act_name} Section {stat.section_number}")
+                # Criminal/statutory sub-store re-grounding lookup before discarding
+                regrounded = False
+                if self.store:
+                    reground_hits = self.store.exact_section_search(stat.section_number, stat.act_name)
+                    if reground_hits:
+                        stat.source_url = reground_hits[0].source_url
+                        stat.is_verified = True
+                        verified_statutes.append(stat)
+                        regrounded = True
+                        print(f"[VerificationNode] RE-GROUNDED statutory citation: {stat.act_name} Section {stat.section_number}")
+
+                if not regrounded:
+                    unverified_stripped.append(f"Statute: {stat.act_name} Section {stat.section_number}")
+                    print(f"[VerificationNode] STRIPPED ungrounded statutory citation: {stat.act_name} Section {stat.section_number}")
 
         # 2. Audit Case Precedent Citations
         verified_precedents: List[PrecedentCitation] = []

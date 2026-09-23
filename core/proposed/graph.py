@@ -40,7 +40,7 @@ class LegalAgentGraph:
         self.decontextualizer = LegalDecontextualizer(settings=self.settings)
         self.reranker = LegalCrossEncoderReranker(settings=self.settings)
         self.planner = ProceduralPlannerAgent(settings=self.settings)
-        self.verifier = VerificationNode(settings=self.settings)
+        self.verifier = VerificationNode(settings=self.settings, store=self.store)
 
         self.graph = self._build_graph()
 
@@ -126,8 +126,9 @@ class LegalAgentGraph:
         if not all_queries:
             all_queries = [state["scenario"]]
 
-        # Hybrid Search across sub-queries
         candidates_map: Dict[str, RetrievedContext] = {}
+
+        # 2a. General Hybrid Search across all sub-queries
         for q in all_queries:
             q_emb = self.embedder.get_embeddings([q])[0]
             hits = self.store.hybrid_search(
@@ -139,6 +140,32 @@ class LegalAgentGraph:
             for hit in hits:
                 if hit.chunk_id not in candidates_map or hit.score > candidates_map[hit.chunk_id].score:
                     candidates_map[hit.chunk_id] = hit
+
+        # 2b. Criminal Code Deep RAG (Parallel Sub-Layer for BNS/BNSS/IPC)
+        domain = state.get("domain")
+        scenario_lower = state["scenario"].lower()
+        has_criminal_indicators = domain in (LegalDomain.MOTOR_VEHICLE_ACCIDENT, LegalDomain.GENERAL_DISPUTE) or any(
+            kw in scenario_lower for kw in ["fir", "police", "arrest", "bail", "accident", "death", "negligen", "hit and run", "cheat", "fraud"]
+        )
+
+        if has_criminal_indicators:
+            crim_queries = [
+                q for q in state.get("statute_queries", [])
+                if any(k in q.lower() for k in ["bns", "bnss", "ipc", "crpc", "fir", "police", "negligen", "offence", "rash"])
+            ]
+            if not crim_queries:
+                crim_queries = [f"{state['scenario']} criminal offence fir police bns"]
+
+            for cq in crim_queries[:2]:
+                cq_emb = self.embedder.get_embeddings([cq])[0]
+                crim_hits = self.store.criminal_code_search(
+                    query_text=cq,
+                    query_embedding=cq_emb,
+                    top_k=5,
+                )
+                for hit in crim_hits:
+                    if hit.chunk_id not in candidates_map or hit.score > candidates_map[hit.chunk_id].score:
+                        candidates_map[hit.chunk_id] = hit
 
         candidates = list(candidates_map.values())
 
