@@ -171,9 +171,9 @@ selected_idx = st.sidebar.selectbox(
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⚙️ Engine Settings")
 st.sidebar.info(
-    f"**LLM Planner:** {settings.openai_model_planner}\n\n"
-    f"**Guardrail & Routing:** {settings.openai_model_guardrail}\n\n"
-    f"**Embeddings:** {settings.embedding_model_name}\n\n"
+    f"**LLM Planner:** {settings.openai_model_primary}\n\n"
+    f"**Guardrail & Routing:** {settings.openai_model_fast}\n\n"
+    f"**Embeddings:** {settings.openai_embedding_model}\n\n"
     f"**Vector Store:** Qdrant Local Embedded (`data/qdrant_storage`)\n\n"
     f"**Search:** Dense + BM25 RRF (k=60) + Cross-Encoder"
 )

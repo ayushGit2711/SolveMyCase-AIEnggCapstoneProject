@@ -116,7 +116,7 @@ class LegalLLMJudge:
         }
 
         completion = self.client.chat.completions.create(
-            model=self.settings.openai_model_planner,
+            model=self.settings.openai_model_primary,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": json.dumps(user_content, indent=2)},
