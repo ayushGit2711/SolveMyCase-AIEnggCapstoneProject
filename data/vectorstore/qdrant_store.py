@@ -70,6 +70,7 @@ class QdrantLegalStore:
             self.client = QdrantClient(path=str(storage_path))
 
         self._ensure_collection_exists()
+        self._load_corpus_from_collection()
 
     def _ensure_collection_exists(self) -> None:
         """Create the target vector collection if it does not already exist."""
@@ -84,6 +85,39 @@ class QdrantLegalStore:
                     distance=qmodels.Distance.COSINE,
                 ),
             )
+
+    def _load_corpus_from_collection(self, batch_size: int = 256) -> None:
+        """Rebuild the in-memory document registry and BM25 index from persisted Qdrant payloads.
+
+        The registry and BM25 index live only in memory, so a store opened by a different
+        process than the indexer (e.g. the API or UI) would otherwise start empty. That makes
+        hybrid search drop every dense hit (no chunk_id -> document mapping) and makes
+        exact-section re-grounding impossible.
+        """
+        contexts: List[RetrievedContext] = []
+        offset = None
+        while True:
+            points, offset = self.client.scroll(
+                collection_name=self.collection_name,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for point in points:
+                if point.payload:
+                    contexts.append(RetrievedContext(**point.payload, score=0.0))
+            if offset is None:
+                break
+
+        self.corpus_documents = contexts
+        if contexts:
+            corpus_tokens = [
+                tokenize_legal_text(f"{doc.title} {doc.citation_or_section} {doc.text}") for doc in contexts
+            ]
+            self.bm25_index = BM25Okapi(corpus_tokens)
+        else:
+            self.bm25_index = None
 
     def reset_collection(self) -> None:
         """Delete and recreate the collection (used for clean re-indexing)."""
