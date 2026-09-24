@@ -1,8 +1,9 @@
 """Streamlit AppTest coverage for every page, run fully offline against an isolated Qdrant index."""
 
 import json
-import re
 from pathlib import Path
+import re
+from urllib.parse import urlparse
 
 import pytest
 import streamlit as st
@@ -237,7 +238,10 @@ def test_malicious_llm_output_is_rendered_inert():
         assert not re.search(r"(?<!\\)\]\(javascript:", text)
 
     link_urls = [e.proto.url for e in at.get("link_button")]
-    assert link_urls == ["https://main.sci.gov.in/ok"]
+    assert "https://main.sci.gov.in/ok" in link_urls
+    # The javascript: source_url is dropped; payload text may only appear URL-encoded inside a search query.
+    assert {urlparse(url).scheme for url in link_urls} == {"https"}
+    assert {urlparse(url).netloc for url in link_urls} == {"main.sci.gov.in", "indiankanoon.org"}
 
 
 def test_every_graph_node_has_a_progress_message():

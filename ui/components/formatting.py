@@ -5,7 +5,7 @@ Pure functions only (no Streamlit calls) so they can be unit-tested directly.
 
 import re
 from typing import Dict, List, Optional
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 from solvemycase.core.proposed.graph import CLARIFICATION_PREFIX, REJECTION_SUMMARY_PREFIX
 from solvemycase.data.ingestion.schema import (
@@ -19,6 +19,10 @@ DISCLAIMER = (
     "solvemycase provides procedural information, not legal advice. "
     "Consult a qualified advocate for your specific situation."
 )
+
+# Indian Kanoon search reliably resolves "Section N in <Act>" to the section page and supports the
+# title: operator for judgments. Official India Code deep links are often unreachable.
+INDIAN_KANOON_SEARCH_URL = "https://indiankanoon.org/search/?formInput="
 
 _MARKDOWN_SPECIAL_CHARS = re.compile(r"([\\`*_\[\]$~|<>#])")
 _PLACEHOLDER_DEADLINES = {"", "N/A", "NA", "NONE", "-"}
@@ -144,3 +148,24 @@ def safe_http_url(url: Optional[str]) -> Optional[str]:
     if parsed.scheme in {"http", "https"} and parsed.netloc:
         return url.strip()
     return None
+
+
+def statute_search_url(act_name: Optional[str], section_number: Optional[str]) -> Optional[str]:
+    """Indian Kanoon search link whose top hit is the cited section (None if the citation is incomplete)."""
+    act, section = (act_name or "").strip(), (section_number or "").strip()
+    if not act or not section:
+        return None
+    return INDIAN_KANOON_SEARCH_URL + quote_plus(f"Section {section} in {act}")
+
+
+def precedent_search_url(case_title: Optional[str]) -> Optional[str]:
+    """Indian Kanoon title search for a judgment (None if no title)."""
+    title = " ".join((case_title or "").split())
+    if not title:
+        return None
+    return INDIAN_KANOON_SEARCH_URL + quote_plus(f"title: {title}")
+
+
+def precedent_read_url(source_url: Optional[str], case_title: Optional[str]) -> Optional[str]:
+    """Best link to read a judgment: its stored http(s) source, else an Indian Kanoon title search."""
+    return safe_http_url(source_url) or precedent_search_url(case_title)

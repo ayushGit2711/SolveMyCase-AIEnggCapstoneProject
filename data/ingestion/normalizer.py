@@ -52,6 +52,7 @@ def classify_act_category(act_name: str) -> str:
 
 
 # Curated landmark precedents with authentic SC/HC citations and official government / court sources
+# Judgment links point to Indian Kanoon: the legacy main.sci.gov.in PDF paths are no longer served.
 CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
     # Motor Vehicle Accidents
     {
@@ -68,7 +69,7 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
             "(1/3rd for 2-3 dependents, 1/4th for 4-6 dependents) and fixed age-multiplier tables (18 for age 15-25, 17 for age 26-30, "
             "16 for age 31-35, down to 5 for age above 65). Established that future prospects must be factored into income assessment."
         ),
-        "source_url": "https://main.sci.gov.in/judgment/judis/34419.pdf",
+        "source_url": "https://indiankanoon.org/doc/837924/",
         "disposition": "Allowed in part",
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
     },
@@ -86,7 +87,7 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
             "add 40% below 40 years, 25% for 40-50 years, 10% for 50-60 years. Conventional heads fixed at: Loss of Estate (Rs. 15,000), "
             "Loss of Consortium (Rs. 40,000), and Funeral Expenses (Rs. 15,000), subject to 10% enhancement every 3 years."
         ),
-        "source_url": "https://main.sci.gov.in/supremecourt/2016/19875/19875_2016_Judgement_31-Oct-2017.pdf",
+        "source_url": "https://indiankanoon.org/doc/139996215/",
         "disposition": "Settled",
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
     },
@@ -106,7 +107,7 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
             "requirements under the Registration Act, 1908. A buyer under GPA/SA only acquires possessory or contractual protection "
             "under Section 53A of TPA if conditions are strictly satisfied."
         ),
-        "source_url": "https://main.sci.gov.in/judgment/judis/38580.pdf",
+        "source_url": "https://indiankanoon.org/doc/1565619/",
         "disposition": "Clarified",
         "domain": LegalDomain.PROPERTY_CONFLICT,
     },
@@ -124,7 +125,7 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
             "Casual, sporadic acts of possession or trespass do not amount to settled possession. A true owner can only be dispossessed "
             "by due process of law, but a trespasser cannot seek an injunction against the rightful title holder."
         ),
-        "source_url": "https://main.sci.gov.in/supremecourt/2008/17260/17260_2008_Judgement_29-Jan-2019.pdf",
+        "source_url": "https://indiankanoon.org/doc/56103097/",
         "disposition": "Allowed",
         "domain": LegalDomain.PROPERTY_CONFLICT,
     },
@@ -143,7 +144,7 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
             "fall strictly under consumer jurisdiction. Unreasonable delay in possession, poor quality of construction, or failure to deliver "
             "amenities constitutes deficiency in service under consumer protection statutes."
         ),
-        "source_url": "https://main.sci.gov.in/judgment/judis/13303.pdf",
+        "source_url": "https://indiankanoon.org/doc/1375046/",
         "disposition": "Dismissed against Authority",
         "domain": LegalDomain.CONSUMER_RIGHTS,
     },
@@ -162,7 +163,7 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
             "at 18% for payment delay while compensating consumers at only Rs. 5/sq.ft for construction delays constitute an "
             "unfair trade practice under Section 2(47) of the Consumer Protection Act, 2019."
         ),
-        "source_url": "https://main.sci.gov.in/supremecourt/2020/22904/22904_2020_4_1501_34947_Judgement_07-Apr-2022.pdf",
+        "source_url": "https://indiankanoon.org/doc/71246029/",
         "disposition": "Affirmed with interest",
         "domain": LegalDomain.CONSUMER_RIGHTS,
     },

@@ -21,9 +21,12 @@ from solvemycase.ui.components.formatting import (
     has_real_deadline,
     is_guardrail_rejection,
     markdown_table_cell,
+    precedent_read_url,
+    precedent_search_url,
     rejection_details,
     removed_references,
     safe_http_url,
+    statute_search_url,
     verified_citation_count,
 )
 
@@ -163,3 +166,26 @@ def test_domain_label_from_value_handles_unknown_and_missing():
 def test_verified_citation_count_sums_statutes_and_precedents():
     assert verified_citation_count(_response()) == 2
     assert verified_citation_count(_response(statutory_citations=[], precedent_citations=[])) == 0
+
+
+def test_statute_search_url_targets_exact_section():
+    assert statute_search_url("Motor Vehicles Act, 1988", "166") == (
+        "https://indiankanoon.org/search/?formInput=Section+166+in+Motor+Vehicles+Act%2C+1988"
+    )
+    assert statute_search_url("", "166") is None
+    assert statute_search_url("Motor Vehicles Act, 1988", None) is None
+
+
+def test_precedent_links_prefer_stored_source_then_title_search():
+    assert precedent_read_url("https://indiankanoon.org/doc/837924/", "Sarla Verma") == "https://indiankanoon.org/doc/837924/"
+    fallback = "https://indiankanoon.org/search/?formInput=title%3A+Sarla+Verma+v.+DTC"
+    assert precedent_search_url("  Sarla Verma   v. DTC ") == fallback
+    assert precedent_read_url("javascript:alert(1)", "Sarla Verma v. DTC") == fallback
+    assert precedent_read_url(None, "") is None
+
+
+def test_response_to_markdown_includes_working_links():
+    md = response_to_markdown("x" * 20, _response(), generated_on=date(2026, 1, 2))
+    assert "[Indian Kanoon](https://indiankanoon.org/search/?formInput=Section+166+in+Motor+Vehicles+Act%2C+1988)" in md
+    assert "[India Code](https://www.indiacode.nic.in/x)" in md
+    assert "[Read judgment](https://main.sci.gov.in/y)" in md
