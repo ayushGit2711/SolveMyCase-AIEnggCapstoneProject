@@ -192,3 +192,32 @@ def test_proposed_langgraph_pipeline(in_memory_store):
         assert stat.source_url.startswith("https://")
     for prec in response.precedent_citations:
         assert prec.source_url.startswith("https://")
+
+
+def test_graph_stream_yields_every_stage_and_matches_run(in_memory_store):
+    """stream() must report each node in order and end with the same response as run()."""
+    graph = LegalAgentGraph(store=in_memory_store)
+    scenario = "A speeding truck hit my scooter and the driver fled. I have fractures and hospital bills."
+
+    updates = list(graph.stream(scenario))
+    node_names = [name for name, _ in updates]
+
+    assert node_names == [
+        "guardrail",
+        "decontextualize",
+        "retrieve_and_rerank",
+        "procedural_planner",
+        "verification",
+        "synthesis",
+    ]
+    streamed_response = updates[-1][1]["final_response"]
+    assert streamed_response == graph.run(scenario)
+
+
+def test_graph_stream_rejection_path(in_memory_store):
+    """Out-of-scope queries stream guardrail -> handle_rejection with a final response."""
+    graph = LegalAgentGraph(store=in_memory_store)
+    updates = list(graph.stream("Please write a poem about the monsoon clouds over Mumbai."))
+
+    assert [name for name, _ in updates] == ["guardrail", "handle_rejection"]
+    assert updates[-1][1]["final_response"].action_plan == []

@@ -1,0 +1,165 @@
+"""Unit tests for pure UI helpers (formatting, deadlines, rejection parsing, Markdown export)."""
+
+from datetime import date
+
+from solvemycase.data.ingestion.schema import (
+    DualOutputResponse,
+    LegalDomain,
+    PrecedentCitation,
+    ProceduralActionStep,
+    ProceduralPhase,
+    StatutoryCitation,
+)
+from solvemycase.ui.components.export import response_to_markdown
+from solvemycase.ui.components.formatting import (
+    DISCLAIMER,
+    domain_label,
+    domain_label_from_value,
+    escape_markdown,
+    extract_deadlines,
+    group_steps_by_phase,
+    has_real_deadline,
+    is_guardrail_rejection,
+    markdown_table_cell,
+    rejection_details,
+    removed_references,
+    safe_http_url,
+    verified_citation_count,
+)
+
+
+def _step(number, phase, priority="High", limitation=None, basis=None):
+    return ProceduralActionStep(
+        step_number=number,
+        phase=phase,
+        title=f"Step title {number}",
+        description=f"Do thing {number}",
+        forum_or_authority="Police Station",
+        statutory_basis=basis,
+        limitation_period=limitation,
+        priority=priority,
+    )
+
+
+def _response(**overrides):
+    base = dict(
+        scenario_summary="Truck hit scooter",
+        domain=LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        action_plan=[
+            _step(3, ProceduralPhase.FORUM_FILING, "High", "Within 6 months", "Section 166 MV Act"),
+            _step(1, ProceduralPhase.IMMEDIATE_ACTION, "Critical", "Immediately"),
+            _step(2, ProceduralPhase.POLICE_ADMINISTRATIVE, "Critical", "N/A"),
+        ],
+        statutory_citations=[
+            StatutoryCitation(
+                act_name="Motor Vehicles Act, 1988",
+                section_number="166",
+                summary_of_provision="Claim application",
+                applicability_to_scenario="Compensation",
+                source_url="https://www.indiacode.nic.in/x",
+            )
+        ],
+        precedent_citations=[
+            PrecedentCitation(
+                case_title="Sarla Verma v. DTC",
+                court="Supreme Court of India",
+                year=2009,
+                legal_principle="Multiplier method",
+                source_url="https://main.sci.gov.in/y",
+            )
+        ],
+        unverified_citations_stripped=["Statute: Fake Act Section 9999"],
+    )
+    base.update(overrides)
+    return DualOutputResponse(**base)
+
+
+def test_group_steps_by_phase_orders_chronologically():
+    grouped = group_steps_by_phase(_response().action_plan)
+    assert list(grouped) == [
+        ProceduralPhase.IMMEDIATE_ACTION,
+        ProceduralPhase.POLICE_ADMINISTRATIVE,
+        ProceduralPhase.FORUM_FILING,
+    ]
+
+
+def test_extract_deadlines_skips_na_and_sorts_by_priority():
+    deadlines = extract_deadlines(_response().action_plan)
+    assert [d["Deadline"] for d in deadlines] == ["Immediately", "Within 6 months"]
+
+
+def test_rejection_helpers():
+    rejected = _response(
+        scenario_summary="Query rejected: The query appears to be non-legal.",
+        action_plan=[],
+        statutory_citations=[],
+        precedent_citations=[],
+        unverified_citations_stripped=["Clarification: Please describe a legal dispute."],
+    )
+    assert is_guardrail_rejection(rejected)
+    assert rejection_details(rejected) == {
+        "reason": "The query appears to be non-legal.",
+        "clarification": "Please describe a legal dispute.",
+    }
+    assert removed_references(rejected) == []
+    assert not is_guardrail_rejection(_response())
+
+
+def test_safe_http_url_blocks_non_http_schemes():
+    assert safe_http_url("https://www.indiacode.nic.in/a") == "https://www.indiacode.nic.in/a"
+    assert safe_http_url("javascript:alert(1)") is None
+    assert safe_http_url("/relative/path") is None
+    assert safe_http_url(None) is None
+
+
+def test_escape_markdown_neutralizes_control_characters():
+    assert escape_markdown("Pay $500 *now* [link](x)") == r"Pay \$500 \*now\* \[link\](x)"
+    assert escape_markdown("<script>") == r"\<script\>"
+    assert escape_markdown(None) == ""
+
+
+def test_response_to_markdown_contains_all_sections():
+    md = response_to_markdown("My father was hit by a truck.", _response(), generated_on=date(2026, 1, 2))
+
+    assert "Generated on 2026-01-02" in md
+    assert "My father was hit by a truck." in md
+    assert md.index("1 · Immediate action") < md.index("5 · File your case")
+    assert "| Immediately | Step title 1 | Police Station |" in md
+    assert "Motor Vehicles Act, 1988, Section 166" in md
+    assert "Sarla Verma v. DTC" in md
+    assert "Fake Act" not in md  # Removed references must never be exported as advice.
+    assert DISCLAIMER in md
+
+
+def test_response_to_markdown_skips_placeholder_deadlines():
+    md = response_to_markdown("x" * 20, _response(), generated_on=date(2026, 1, 2))
+    assert "- Deadline: N/A" not in md
+    assert "- Deadline: Immediately" in md
+
+
+def test_response_to_markdown_escapes_table_cells():
+    steps = [_step(1, ProceduralPhase.IMMEDIATE_ACTION, "Critical", "Within 30 days | or less\nurgent")]
+    md = response_to_markdown("x" * 20, _response(action_plan=steps), generated_on=date(2026, 1, 2))
+    assert "| Within 30 days \\| or less urgent | Step title 1 | Police Station |" in md
+
+
+def test_markdown_table_cell_flattens_and_escapes_pipes():
+    assert markdown_table_cell("a | b\n c") == "a \\| b c"
+    assert markdown_table_cell(None) == ""
+
+
+def test_has_real_deadline_rejects_placeholders():
+    assert has_real_deadline(_step(1, ProceduralPhase.IMMEDIATE_ACTION, limitation="Within 6 months"))
+    for placeholder in (None, "", " n/a ", "NA", "None", "-"):
+        assert not has_real_deadline(_step(1, ProceduralPhase.IMMEDIATE_ACTION, limitation=placeholder))
+
+
+def test_domain_label_from_value_handles_unknown_and_missing():
+    assert domain_label_from_value("consumer_rights") == domain_label(LegalDomain.CONSUMER_RIGHTS)
+    assert domain_label_from_value("family_law") == "Family Law"
+    assert domain_label_from_value(None) == "Unknown"
+
+
+def test_verified_citation_count_sums_statutes_and_precedents():
+    assert verified_citation_count(_response()) == 2
+    assert verified_citation_count(_response(statutory_citations=[], precedent_citations=[])) == 0

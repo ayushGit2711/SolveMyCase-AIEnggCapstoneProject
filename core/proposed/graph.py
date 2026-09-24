@@ -5,7 +5,7 @@ Guardrail -> Decontextualization -> Hybrid Retrieval & Reranker ->
 Procedural Planner -> Verification Node -> Dual-Output Synthesis.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 from langgraph.graph import END, StateGraph
 
 from solvemycase.config.settings import Settings, get_settings
@@ -22,6 +22,11 @@ from solvemycase.data.ingestion.schema import (
 )
 from solvemycase.data.vectorstore.indexer import EmbeddingProvider
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
+
+# Wire format of a guardrail rejection inside DualOutputResponse. Consumers (e.g. the UI) import
+# these instead of re-typing the literals.
+REJECTION_SUMMARY_PREFIX = "Query rejected: "
+CLARIFICATION_PREFIX = "Clarification: "
 
 
 class LegalAgentGraph:
@@ -100,13 +105,13 @@ class LegalAgentGraph:
         reason = state.get("rejection_reason") or "Query out of scope."
         prompt = state.get("clarification_prompt") or "Please provide a valid Indian legal dispute scenario."
         rejection_response = DualOutputResponse(
-            scenario_summary=f"Query rejected: {reason}",
+            scenario_summary=f"{REJECTION_SUMMARY_PREFIX}{reason}",
             domain=state.get("domain", LegalDomain.GENERAL_DISPUTE),
             action_plan=[],
             statutory_citations=[],
             precedent_citations=[],
             hallucination_check_passed=True,
-            unverified_citations_stripped=[f"Clarification: {prompt}"],
+            unverified_citations_stripped=[f"{CLARIFICATION_PREFIX}{prompt}"],
         )
         return {"final_response": rejection_response}
 
@@ -196,16 +201,10 @@ class LegalAgentGraph:
         )
         return {"final_response": response}
 
-    def run(self, scenario: str) -> DualOutputResponse:
-        """Execute the complete Approach B pipeline for a given scenario.
-
-        Args:
-            scenario: Factual legal scenario narrative.
-
-        Returns:
-            DualOutputResponse with verified action plan and citations.
-        """
-        initial_state: AgentState = {
+    @staticmethod
+    def _initial_state(scenario: str) -> AgentState:
+        """Build the empty AgentState that seeds a graph execution."""
+        return {
             "scenario": scenario,
             "is_legal": False,
             "domain": LegalDomain.GENERAL_DISPUTE,
@@ -227,5 +226,31 @@ class LegalAgentGraph:
             "final_response": None,
         }
 
-        output_state = self.graph.invoke(initial_state)
+    def run(self, scenario: str) -> DualOutputResponse:
+        """Execute the complete Approach B pipeline for a given scenario.
+
+        Args:
+            scenario: Factual legal scenario narrative.
+
+        Returns:
+            DualOutputResponse with verified action plan and citations.
+        """
+        output_state = self.graph.invoke(self._initial_state(scenario))
         return output_state["final_response"]
+
+    def stream(self, scenario: str) -> Iterator[Tuple[str, Dict[str, Any]]]:
+        """Execute the pipeline node by node, yielding each node's state update as it completes.
+
+        Lets callers (e.g. the UI) report live progress. The last yielded update comes from
+        either the "synthesis" or "handle_rejection" node and contains "final_response".
+
+        Args:
+            scenario: Factual legal scenario narrative.
+
+        Yields:
+            Tuples of (node_name, state_update_dict).
+        """
+        for chunk in self.graph.stream(self._initial_state(scenario), stream_mode="updates"):
+            for node_name, update in chunk.items():
+                yield node_name, update or {}
+

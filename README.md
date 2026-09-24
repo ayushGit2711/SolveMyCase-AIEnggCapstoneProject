@@ -103,7 +103,11 @@ solvemycase/                      ← repo root (package)
 │   ├── comparative_runner.py     Runs A vs B → benchmark_results.json
 │   ├── metrics.py                Grounding, hallucination rate, phase completeness, forum accuracy
 │   └── llm_judge.py              LLM-as-a-judge (+ programmatic fallback)
-├── ui/app.py                     Streamlit side-by-side comparison UI
+├── ui/
+│   ├── app.py                    Streamlit entrypoint (navigation + sidebar)
+│   ├── state.py                  Cached engines, live corpus stats, benchmark loaders
+│   ├── views/                    Pages: Get help, Compare A vs B, Benchmark, How it works
+│   └── components/               Reusable widgets: input, progress, action plan, citations, export
 ├── tests/                        pytest suite
 └── AGENTS.md / GEMINI.md         Coding guidelines for AI agents & contributors
 ```
@@ -229,7 +233,7 @@ python -m solvemycase.evaluation.comparative_runner --limit 5  # quick run
 python -m pytest solvemycase/tests -q
 ```
 
-The suite (20 tests) covers config, normalizer, vector store, both pipelines, metrics/judge, and the API. It runs fully offline.
+The suite (46 tests) covers config, normalizer, vector store, both pipelines (incl. streaming), metrics/judge, the API, and every UI page (Streamlit AppTest, offline). It runs fully offline.
 
 ---
 
