@@ -37,13 +37,22 @@ st.markdown(
     .main-header {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #1E3A8A;
+        color: #3B82F6;  /* mid-blue: readable on both light and dark themes */
         margin-bottom: 0.2rem;
     }
     .sub-header {
         font-size: 1.05rem;
-        color: #4B5563;
+        color: inherit;  /* follow the active Streamlit theme's text color */
+        opacity: 0.75;
         margin-bottom: 1.5rem;
+    }
+    /* Cards use fixed light backgrounds, so they must set their own dark text
+       color; otherwise they inherit white text from Streamlit's dark theme. */
+    .metric-card, .step-box, .citation-box, .audit-box {
+        color: #1F2937;
+    }
+    .metric-card a, .step-box a, .citation-box a, .audit-box a {
+        color: #1D4ED8;
     }
     .metric-card {
         background-color: #F8FAFC;
@@ -332,7 +341,7 @@ with tab1:
                 st.markdown("#### 📋 Verified Chronological Roadmap")
                 for step in proposed_res.action_plan:
                     phase_name = step.phase.value.replace("_", " ").title()
-                    priority_color = "#EF4444" if step.priority == "Critical" else ("#F59E0B" if step.priority == "High" else "#3B82F6")
+                    priority_color = "#DC2626" if step.priority == "Critical" else ("#B45309" if step.priority == "High" else "#1D4ED8")
                     st.markdown(
                         f"""
                         <div class='step-box'>
