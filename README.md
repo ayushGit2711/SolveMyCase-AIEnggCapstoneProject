@@ -173,12 +173,16 @@ python -m solvemycase.data.vectorstore.indexer      # embed + index into Qdrant 
 > [!NOTE]
 > If you switch between offline and OpenAI embeddings, re-run the indexer. Hashed and OpenAI vectors are not comparable.
 
-### 5. Run the API and the UI
+### 5. Run the API or the UI
 
 ```bash
-uvicorn solvemycase.api.main:app --reload --port 8000     # API docs at http://localhost:8000/docs
-streamlit run solvemycase/ui/app.py                        # UI at http://localhost:8501
+uvicorn solvemycase.api.main:app --reload --port 8000        # API docs at http://localhost:8000/docs
+PYTHONPATH=. streamlit run solvemycase/ui/app.py             # UI at http://localhost:8501
 ```
+
+> [!NOTE]
+> `streamlit run` only adds the script's own folder (`ui/`) to the import path, so `PYTHONPATH=.` is needed for `import solvemycase` to work.
+> The UI calls both pipelines directly and doesn't need the API. In embedded mode (`QDRANT_PATH`), only one process can open the Qdrant store, so run **either** the API **or** the UI. To run both, point them at a remote Qdrant with `QDRANT_URL`.
 
 ---
 
