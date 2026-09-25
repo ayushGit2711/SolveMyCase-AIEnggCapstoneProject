@@ -167,7 +167,7 @@ Key settings (all overridable via env vars; see [`config/settings.py`](config/se
 | `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Dense embeddings |
 | `QDRANT_PATH` | `data/qdrant_storage` | Embedded Qdrant (no Docker); relative to package root |
 | `QDRANT_URL` / `QDRANT_API_KEY` | *(unset)* | Use a remote Qdrant instead |
-| `MAX_RETRIEVED_CHUNKS` / `RERANK_TOP_K` | `8` / `4` | Retrieval depth / contexts passed to the planner |
+| `MAX_RETRIEVED_CHUNKS` / `RERANK_TOP_K` | `10` / `6` | Retrieval depth / contexts passed to the planner |
 | `RETRIEVAL_MIN_CONFIDENCE` | `0.25` | `RetrievalQualityGate` threshold for unfiltered fallback search |
 | `VERIFICATION_STRICT_MODE` | `true` | Strict citation grounding |
 

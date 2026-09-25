@@ -123,7 +123,7 @@ class Settings(BaseSettings):
 
     # Retrieval & Reranker Settings
     max_retrieved_chunks: int = Field(
-        default=8,
+        default=10,
         validation_alias="MAX_RETRIEVED_CHUNKS",
         description="Number of candidate documents fetched from hybrid BM25 + dense search.",
     )
