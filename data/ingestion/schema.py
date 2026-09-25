@@ -160,6 +160,16 @@ CRIMINAL_ROUTE_KEYWORDS = (
     "hit and run",
     "cheat",
     "fraud",
+    "abus",
+    "insult",
+    "threat",
+    "intimidat",
+    "harass",
+    "theft",
+    "stole",
+    "stolen",
+    "misappropriat",
+    "assault",
 )
 
 

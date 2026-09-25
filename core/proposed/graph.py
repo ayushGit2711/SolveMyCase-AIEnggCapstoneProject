@@ -19,6 +19,7 @@ from solvemycase.core.retrieval.reranker import LegalCrossEncoderReranker
 from solvemycase.core.telemetry import log_inference_event
 from solvemycase.data.ingestion.schema import (
     CLARIFICATION_PREFIX,
+    DocumentType,
     DualOutputResponse,
     ExecutionTrace,
     LegalDomain,
@@ -199,6 +200,25 @@ class LegalAgentGraph:
                 candidates=list(candidates_map.values()),
                 top_k=self.settings.rerank_top_k,
             )
+
+        # 2d. Ensure at least one domain-matched precedent is included so case law is always grounded
+        existing_prec_ids = {c.chunk_id for c in reranked if c.doc_type == DocumentType.PRECEDENT}
+        if not existing_prec_ids:
+            domain_precedents = [
+                doc
+                for doc in self.store.corpus_documents
+                if doc.doc_type == DocumentType.PRECEDENT
+                and (not domain or domain == LegalDomain.GENERAL_DISPUTE or doc.domain == domain)
+            ]
+            if domain_precedents:
+                ranked_precs = self.reranker.rerank(
+                    query=state["scenario"],
+                    candidates=domain_precedents,
+                    top_k=2,
+                )
+                for p_doc in ranked_precs[:2]:
+                    if p_doc.chunk_id not in {c.chunk_id for c in reranked}:
+                        reranked.append(p_doc)
 
         return {
             "retrieved_contexts": reranked,

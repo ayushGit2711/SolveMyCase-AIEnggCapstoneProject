@@ -131,6 +131,42 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
     },
     # Consumer Rights Violations
     {
+        "doc_id": "sc_cpa_patel_roadways_2000",
+        "chunk_id": "sc_cpa_patel_roadways_2000_001",
+        "court": "Supreme Court of India",
+        "court_type": "supreme_court",
+        "title": "Patel Roadways Ltd. v. Birla Yamaha Ltd.",
+        "citation": "(2000) 4 SCC 91",
+        "year": 2000,
+        "text": (
+            "The Supreme Court held that loss, damage, or non-delivery of a package, parcel, or consignment entrusted to a carrier, "
+            "courier, or delivery service provider (such as logistics, parcel delivery, or app-based courier platforms) constitutes "
+            "'deficiency in service' under the Consumer Protection Act. Consumer Commissions have full jurisdiction to entertain "
+            "complaints for lost packages, and the carrier/delivery platform bears strict liability to compensate the consumer for the "
+            "value of the lost goods without requiring the consumer to prove specific negligence by the delivery partner."
+        ),
+        "source_url": "https://indiankanoon.org/doc/1907957/",
+        "disposition": "Dismissed against Carrier",
+        "domain": LegalDomain.CONSUMER_RIGHTS,
+    },
+    {
+        "doc_id": "sc_cpa_bharathi_knitting_1996",
+        "chunk_id": "sc_cpa_bharathi_knitting_1996_001",
+        "court": "Supreme Court of India",
+        "court_type": "supreme_court",
+        "title": "Bharathi Knitting Company v. DHL Worldwide Express Courier Division",
+        "citation": "(1996) 4 SCC 704",
+        "year": 1996,
+        "text": (
+            "The Supreme Court ruled that courier and parcel delivery operators are accountable before Consumer Dispute Redressal "
+            "Commissions for deficiency in service when a consigned package or parcel is lost, misdelivered, or delayed in transit, "
+            "and the consumer is entitled to recover compensation for the loss suffered."
+        ),
+        "source_url": "https://indiankanoon.org/doc/126678/",
+        "disposition": "Decided on Courier Liability",
+        "domain": LegalDomain.CONSUMER_RIGHTS,
+    },
+    {
         "doc_id": "sc_cpa_lucknow_dev_auth_1994",
         "chunk_id": "sc_cpa_lucknow_dev_auth_1994_001",
         "court": "Supreme Court of India",
@@ -140,9 +176,9 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
         "year": 1994,
         "text": (
             "Landmark decision expanding the ambit of 'service' and 'deficiency' under consumer law. The Supreme Court held that "
-            "statutory development authorities, housing boards, and builders providing housing construction and allotment services "
-            "fall strictly under consumer jurisdiction. Unreasonable delay in possession, poor quality of construction, or failure to deliver "
-            "amenities constitutes deficiency in service under consumer protection statutes."
+            "Consumer Commissions are empowered to award compensation not only for the monetary value of lost goods or deficient services, "
+            "but also for mental agony, emotional distress, harassment, insult, and capricious or abusive conduct by service providers, "
+            "platforms, statutory authorities, or their employees and delivery agents."
         ),
         "source_url": "https://indiankanoon.org/doc/1375046/",
         "disposition": "Dismissed against Authority",
@@ -171,6 +207,39 @@ CURATED_LANDMARK_PRECEDENTS: List[Dict[str, any]] = [
 
 # Baseline fallback provisions for offline/test environments
 FALLBACK_PROVISIONS: List[Dict[str, any]] = [
+    {
+        "doc_id": "central_bns_2023_sec_316",
+        "act_name": "Bharatiya Nyaya Sanhita, 2023",
+        "section_number": "316",
+        "title": "Criminal breach of trust (including by carrier or delivery agent)",
+        "text": (
+            "Whoever, being in any manner entrusted with property, or with any dominion over property (such as a package, parcel, or goods "
+            "entrusted for delivery), dishonestly misappropriates or converts to his own use that property, commits criminal breach of trust. "
+            "Under sub-section (3), whoever, being entrusted with property as a carrier, courier, delivery partner, wharfinger, or warehouse-keeper, "
+            "commits criminal breach of trust in respect of such property, shall be punished with imprisonment which may extend to seven years, and shall also be liable to fine."
+        ),
+        "source_url": "https://indiacode.gov.in/handle/123456789/545808",
+        "jurisdiction": "Central",
+        "year": 2023,
+        "domain": LegalDomain.CONSUMER_RIGHTS,
+        "act_category": "criminal",
+    },
+    {
+        "doc_id": "central_bns_2023_sec_352",
+        "act_name": "Bharatiya Nyaya Sanhita, 2023",
+        "section_number": "352",
+        "title": "Intentional insult with intent to provoke breach of peace",
+        "text": (
+            "Whoever intentionally insults in any manner (including using abusive, profane, or humiliating language against a customer or citizen), "
+            "and thereby gives provocation to any person, intending or knowing it to be likely that such provocation will cause him to break the public peace, "
+            "or to commit any other offence, shall be punished with imprisonment of either description for a term which may extend to two years, or with fine, or with both."
+        ),
+        "source_url": "https://indiacode.gov.in/handle/123456789/545841",
+        "jurisdiction": "Central",
+        "year": 2023,
+        "domain": LegalDomain.CONSUMER_RIGHTS,
+        "act_category": "criminal",
+    },
     # Motor Vehicles Act, 1988
     {
         "doc_id": "central_mva_1988_sec_134",

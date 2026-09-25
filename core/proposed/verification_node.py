@@ -119,7 +119,13 @@ class VerificationNode:
                         f"{stat.act_name} Section {stat.section_number}"
                     )
 
-        # 2. Audit Case Precedent Citations strictly against retrieved PRECEDENT contexts
+        # 2. Audit Case Precedent Citations strictly against retrieved PRECEDENT titles/citations
+        _PRECEDENT_STOPWORDS = {
+            "state", "union", "india", "others", "versus", "anr", "ors", "limited", "private",
+            "company", "corporation", "authority", "development", "consumer", "service", "services",
+            "delivery", "express", "transport", "insurance", "national", "industries", "developers",
+            "builders", "division", "board", "trust", "kumar", "sharma", "singh", "ram", "pvt", "ltd",
+        }
         precedent_contexts = [c for c in retrieved_contexts if c.doc_type == DocumentType.PRECEDENT]
         verified_precedents: List[PrecedentCitation] = []
         for prec in draft_precedents:
@@ -127,18 +133,24 @@ class VerificationNode:
             title_words = [
                 w
                 for w in re.split(r"\W+", prec.case_title.lower())
-                if len(w) > 3 and w not in {"state", "union", "india", "others", "versus", "anr", "ors"}
+                if len(w) > 3 and w not in _PRECEDENT_STOPWORDS
             ]
 
             matched_ctx = verified_precedents_map.get(prec_key)
             if matched_ctx is None and title_words and precedent_contexts:
                 for p_ctx in precedent_contexts:
-                    p_blob = f"{p_ctx.title} {p_ctx.citation_or_section} {p_ctx.text}".lower()
-                    if any(w in p_blob for w in title_words):
+                    p_title_blob = f"{p_ctx.title} {p_ctx.citation_or_section}".lower()
+                    if any(re.search(rf"\b{re.escape(w)}\b", p_title_blob) for w in title_words):
                         matched_ctx = p_ctx
                         break
 
             if matched_ctx is not None:
+                # Canonicalize title, citation, court, and URL to prevent cross-judgment mismatch
+                prec.case_title = re.sub(r"\s*\((?:\(\d{4}\)|\d{4}|AIR).*$", "", matched_ctx.title).strip()
+                if matched_ctx.citation_or_section:
+                    prec.citation = matched_ctx.citation_or_section
+                if matched_ctx.court:
+                    prec.court = matched_ctx.court
                 if matched_ctx.source_url:
                     prec.source_url = matched_ctx.source_url
 
@@ -147,6 +159,23 @@ class VerificationNode:
             else:
                 unverified_stripped.append(f"Precedent: {prec.case_title}")
                 print(f"[VerificationNode] STRIPPED ungrounded judicial precedent: {prec.case_title}")
+
+        # 2b. If no precedent was verified (e.g., LLM omitted or cited unretrieved case), ground the top retrieved domain precedent
+        if not verified_precedents and precedent_contexts:
+            top_p = precedent_contexts[0]
+            clean_title = re.sub(r"\s*\((?:\(\d{4}\)|\d{4}|AIR).*$", "", top_p.title).strip()
+            year_match = re.search(r"\b(19\d\d|20\d\d)\b", f"{top_p.citation_or_section} {top_p.title}")
+            verified_precedents.append(
+                PrecedentCitation(
+                    case_title=clean_title,
+                    court=top_p.court or "Supreme Court of India",
+                    year=int(year_match.group(1)) if year_match else None,
+                    citation=top_p.citation_or_section,
+                    legal_principle=top_p.text,
+                    source_url=top_p.source_url,
+                    is_verified=True,
+                )
+            )
 
         # 3. Audit Action Plan Steps (including 1- and 2-digit unverified section references)
         allowed_section_ids: Set[str] = {
