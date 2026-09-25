@@ -9,10 +9,25 @@ Exposes REST endpoints for:
 - Latest benchmark summary (/benchmark/summary)
 """
 
+import importlib.util
 import json
 from pathlib import Path
+import sys
 import time
 from typing import Any, Dict, List, Optional
+
+if importlib.util.find_spec("solvemycase") is None:
+    _repo_root = Path(__file__).resolve().parent.parent
+    _spec = importlib.util.spec_from_file_location(
+        "solvemycase",
+        _repo_root / "__init__.py",
+        submodule_search_locations=[str(_repo_root)],
+    )
+    if _spec and _spec.loader:
+        _pkg = importlib.util.module_from_spec(_spec)
+        sys.modules["solvemycase"] = _pkg
+        _spec.loader.exec_module(_pkg)
+
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -21,7 +36,7 @@ from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.proposed.graph import LegalAgentGraph
 from solvemycase.data.ingestion.schema import DualOutputResponse, LegalDomain
-from solvemycase.data.vectorstore.indexer import EmbeddingProvider
+from solvemycase.data.vectorstore.indexer import EmbeddingProvider, run_indexing_pipeline
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 from solvemycase.evaluation.metrics import (
     compute_citation_grounding_metrics,
@@ -57,6 +72,8 @@ def get_engine():
     if _settings is None:
         _settings = get_settings()
         _store = QdrantLegalStore(settings=_settings)
+        if len(_store.corpus_documents) < 40:
+            run_indexing_pipeline(store=_store, download_corpus=False, force_reset=True)
         _embedder = EmbeddingProvider(settings=_settings)
         _baseline = VanillaRAGBaseline(settings=_settings, store=_store, embedder=_embedder)
         _proposed = LegalAgentGraph(settings=_settings, store=_store, embedder=_embedder)

@@ -1,0 +1,9 @@
+.git
+.gitignore
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+data/qdrant_storage/
+data/raw/*.parquet

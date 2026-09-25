@@ -6,6 +6,22 @@ Run from the parent directory of the package:
 Page content lives in ``ui/views``; reusable widgets live in ``ui/components``.
 """
 
+import importlib.util
+from pathlib import Path
+import sys
+
+if importlib.util.find_spec("solvemycase") is None:
+    _repo_root = Path(__file__).resolve().parent.parent
+    _spec = importlib.util.spec_from_file_location(
+        "solvemycase",
+        _repo_root / "__init__.py",
+        submodule_search_locations=[str(_repo_root)],
+    )
+    if _spec and _spec.loader:
+        _pkg = importlib.util.module_from_spec(_spec)
+        sys.modules["solvemycase"] = _pkg
+        _spec.loader.exec_module(_pkg)
+
 import streamlit as st
 
 from solvemycase.ui.components.formatting import DISCLAIMER

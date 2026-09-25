@@ -16,7 +16,7 @@ from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.proposed.graph import LegalAgentGraph
 from solvemycase.data.ingestion.schema import DocumentType
-from solvemycase.data.vectorstore.indexer import EmbeddingProvider
+from solvemycase.data.vectorstore.indexer import EmbeddingProvider, run_indexing_pipeline
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 
 EVALUATION_DIR = Path(__file__).resolve().parent.parent / "evaluation"
@@ -36,6 +36,8 @@ def get_engines() -> Engines:
     """Create (once per process) the vector store, embedder, and both pipelines."""
     settings = get_settings()
     store = QdrantLegalStore(settings=settings)
+    if len(store.corpus_documents) < 40:
+        run_indexing_pipeline(store=store, download_corpus=False, force_reset=True)
     embedder = EmbeddingProvider(settings=settings)
     return Engines(
         settings=settings,

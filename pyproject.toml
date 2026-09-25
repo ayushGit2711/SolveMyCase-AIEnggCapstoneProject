@@ -38,6 +38,9 @@ dev = [
     "pytest-asyncio>=0.23.0"
 ]
 
+[tool.setuptools.package-dir]
+solvemycase = "."
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
