@@ -24,9 +24,12 @@ class AgentState(TypedDict):
     clarification_prompt: Optional[str]
     key_entities: Dict[str, Any]
 
-    # Decontextualized Retrieval Queries
+    # Decontextualized Retrieval Queries & Routing Telemetry
     statute_queries: List[str]
     precedent_queries: List[str]
+    criminal_route_triggered: bool
+    criminal_queries: List[str]
+    retrieval_gate_triggered: bool
 
     # Retrieved & Reranked Legal Context
     retrieved_contexts: List[RetrievedContext]

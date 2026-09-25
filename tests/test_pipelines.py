@@ -1,6 +1,7 @@
 """Unit and integration tests for Approach A (Baseline) and Approach B (Proposed LangGraph)."""
 
 import pytest
+from solvemycase.config.settings import Settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.guardrails.scope_checker import ScopeChecker
 from solvemycase.core.proposed.graph import LegalAgentGraph
@@ -25,8 +26,9 @@ def in_memory_store():
     from solvemycase.data.vectorstore.indexer import EmbeddingProvider
     from pathlib import Path
 
-    store = QdrantLegalStore(vector_dim=1536, in_memory=True)
-    embedder = EmbeddingProvider(dim=1536)
+    offline_settings = Settings(openai_api_key=None)
+    store = QdrantLegalStore(settings=offline_settings, vector_dim=1536, in_memory=True)
+    embedder = EmbeddingProvider(settings=offline_settings, dim=1536)
 
     provisions = load_legal_provisions_from_parquet(Path("/nonexistent"))
     precedents = load_legal_precedents()
@@ -45,7 +47,7 @@ def in_memory_store():
 
 def test_scope_checker_guardrails():
     """Verify input guardrail screens non-legal queries and classifies domains."""
-    checker = ScopeChecker()
+    checker = ScopeChecker(settings=Settings(openai_api_key=None))
 
     # 1. Non-legal rejection
     cake_res = checker.check_scope("Give me a delicious recipe to bake a chocolate cake.")
@@ -69,11 +71,16 @@ def test_scope_checker_guardrails():
 
 
 def test_vanilla_rag_baseline(in_memory_store):
-    """Test Approach A baseline RAG pipeline execution."""
-    baseline = VanillaRAGBaseline(store=in_memory_store)
+    """Test Approach A baseline RAG pipeline execution and IT-1 run_with_trace parity."""
+    offline_settings = Settings(openai_api_key=None)
+    baseline = VanillaRAGBaseline(settings=offline_settings, store=in_memory_store)
     scenario = "Speeding truck collided with motorcyclist causing severe spinal injury. Driver ran away."
 
     response = baseline.run(scenario)
+    resp_trace, trace = baseline.run_with_trace(scenario)
+    assert response == resp_trace
+    assert trace.pipeline_type == "vanilla_rag"
+    assert trace.nodes_visited == ["embed_query", "hybrid_search", "monolithic_generate"]
     assert response.domain == LegalDomain.MOTOR_VEHICLE_ACCIDENT
     assert len(response.action_plan) > 0
     assert len(response.statutory_citations) > 0
@@ -81,7 +88,7 @@ def test_vanilla_rag_baseline(in_memory_store):
 
 def test_verification_node_strips_hallucinated_citations():
     """Verify that the verification node catches and strips ungrounded citations."""
-    verifier = VerificationNode()
+    verifier = VerificationNode(settings=Settings(openai_api_key=None))
 
     # Create real context
     real_context = [
@@ -170,17 +177,29 @@ def test_verification_node_strips_hallucinated_citations():
 
 
 def test_proposed_langgraph_pipeline(in_memory_store):
-    """Test Approach B LangGraph state graph execution end-to-end."""
-    graph_runner = LegalAgentGraph(store=in_memory_store)
+    """Test Approach B LangGraph state graph execution end-to-end and IT-1/IT-2 trace parity."""
+    offline_settings = Settings(openai_api_key=None)
+    graph_runner = LegalAgentGraph(settings=offline_settings, store=in_memory_store)
 
     # 1. Test rejection flow
-    rejected_res = graph_runner.run("Tell me the history of ancient Rome.")
+    rejected_res, rej_trace = graph_runner.run_with_trace("Tell me the history of ancient Rome.")
     assert len(rejected_res.action_plan) == 0
     assert "Query rejected" in rejected_res.scenario_summary
+    assert rej_trace.nodes_visited == ["guardrail", "handle_rejection"]
 
     # 2. Test successful dispute flow
     scenario = "My landlord locked the flat while I was at work and threw my belongings out without any court order."
     response = graph_runner.run(scenario)
+    resp_trace, trace = graph_runner.run_with_trace(scenario)
+    assert response == resp_trace
+    assert trace.nodes_visited == [
+        "guardrail",
+        "decontextualize",
+        "retrieve_and_rerank",
+        "procedural_planner",
+        "verification",
+        "synthesis",
+    ]
 
     assert response.domain == LegalDomain.PROPERTY_CONFLICT
     assert len(response.action_plan) >= 3
@@ -193,10 +212,16 @@ def test_proposed_langgraph_pipeline(in_memory_store):
     for prec in response.precedent_citations:
         assert prec.source_url.startswith("https://")
 
+    # 3. IT-2: Verify RetrievalQualityGate triggers when retrieval_min_confidence exceeds top rerank score
+    high_threshold_settings = Settings(openai_api_key=None, retrieval_min_confidence=0.9999)
+    gate_graph = LegalAgentGraph(settings=high_threshold_settings, store=in_memory_store)
+    _, gate_trace = gate_graph.run_with_trace(scenario)
+    assert gate_trace.retrieval_gate_triggered is True
+
 
 def test_graph_stream_yields_every_stage_and_matches_run(in_memory_store):
     """stream() must report each node in order and end with the same response as run()."""
-    graph = LegalAgentGraph(store=in_memory_store)
+    graph = LegalAgentGraph(settings=Settings(openai_api_key=None), store=in_memory_store)
     scenario = "A speeding truck hit my scooter and the driver fled. I have fractures and hospital bills."
 
     updates = list(graph.stream(scenario))
@@ -216,7 +241,7 @@ def test_graph_stream_yields_every_stage_and_matches_run(in_memory_store):
 
 def test_graph_stream_rejection_path(in_memory_store):
     """Out-of-scope queries stream guardrail -> handle_rejection with a final response."""
-    graph = LegalAgentGraph(store=in_memory_store)
+    graph = LegalAgentGraph(settings=Settings(openai_api_key=None), store=in_memory_store)
     updates = list(graph.stream("Please write a poem about the monsoon clouds over Mumbai."))
 
     assert [name for name, _ in updates] == ["guardrail", "handle_rejection"]

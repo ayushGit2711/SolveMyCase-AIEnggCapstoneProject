@@ -6,6 +6,7 @@ Procedural Planner -> Verification Node -> Dual-Output Synthesis.
 """
 
 from typing import Any, Dict, Iterator, List, Optional, Tuple
+import time
 from langgraph.graph import END, StateGraph
 
 from solvemycase.config.settings import Settings, get_settings
@@ -15,18 +16,18 @@ from solvemycase.core.proposed.state import AgentState
 from solvemycase.core.proposed.verification_node import VerificationNode
 from solvemycase.core.retrieval.decontextualizer import LegalDecontextualizer
 from solvemycase.core.retrieval.reranker import LegalCrossEncoderReranker
+from solvemycase.core.telemetry import log_inference_event
 from solvemycase.data.ingestion.schema import (
+    CLARIFICATION_PREFIX,
     DualOutputResponse,
+    ExecutionTrace,
     LegalDomain,
+    REJECTION_SUMMARY_PREFIX,
     RetrievedContext,
+    should_trigger_criminal_route,
 )
 from solvemycase.data.vectorstore.indexer import EmbeddingProvider
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
-
-# Wire format of a guardrail rejection inside DualOutputResponse. Consumers (e.g. the UI) import
-# these instead of re-typing the literals.
-REJECTION_SUMMARY_PREFIX = "Query rejected: "
-CLARIFICATION_PREFIX = "Clarification: "
 
 
 class LegalAgentGraph:
@@ -148,11 +149,9 @@ class LegalAgentGraph:
 
         # 2b. Criminal Code Deep RAG (Parallel Sub-Layer for BNS/BNSS/IPC)
         domain = state.get("domain")
-        scenario_lower = state["scenario"].lower()
-        has_criminal_indicators = domain in (LegalDomain.MOTOR_VEHICLE_ACCIDENT, LegalDomain.GENERAL_DISPUTE) or any(
-            kw in scenario_lower for kw in ["fir", "police", "arrest", "bail", "accident", "death", "negligen", "hit and run", "cheat", "fraud"]
-        )
+        has_criminal_indicators = should_trigger_criminal_route(domain, state["scenario"])
 
+        crim_queries: List[str] = []
         if has_criminal_indicators:
             crim_queries = [
                 q for q in state.get("statute_queries", [])
@@ -181,7 +180,32 @@ class LegalAgentGraph:
             top_k=self.settings.rerank_top_k,
         )
 
-        return {"retrieved_contexts": reranked}
+        # 2c. Retrieval Quality Gate: fallback to broad unfiltered search if confidence is low
+        retrieval_gate_triggered = False
+        if not reranked or reranked[0].score < self.settings.retrieval_min_confidence:
+            retrieval_gate_triggered = True
+            broad_emb = self.embedder.get_embeddings([state["scenario"]])[0]
+            broad_hits = self.store.hybrid_search(
+                query_text=state["scenario"],
+                query_embedding=broad_emb,
+                top_k=self.settings.max_retrieved_chunks,
+                domain_filter=None,
+            )
+            for hit in broad_hits:
+                if hit.chunk_id not in candidates_map or hit.score > candidates_map[hit.chunk_id].score:
+                    candidates_map[hit.chunk_id] = hit
+            reranked = self.reranker.rerank(
+                query=state["scenario"],
+                candidates=list(candidates_map.values()),
+                top_k=self.settings.rerank_top_k,
+            )
+
+        return {
+            "retrieved_contexts": reranked,
+            "criminal_route_triggered": bool(has_criminal_indicators),
+            "criminal_queries": crim_queries[:2] if has_criminal_indicators else [],
+            "retrieval_gate_triggered": retrieval_gate_triggered,
+        }
 
     def _procedural_planner_step(self, state: AgentState) -> Dict[str, Any]:
         return self.planner.plan(state)
@@ -213,6 +237,9 @@ class LegalAgentGraph:
             "key_entities": {},
             "statute_queries": [],
             "precedent_queries": [],
+            "criminal_route_triggered": False,
+            "criminal_queries": [],
+            "retrieval_gate_triggered": False,
             "retrieved_contexts": [],
             "draft_action_plan": [],
             "draft_statutory_citations": [],
@@ -226,6 +253,44 @@ class LegalAgentGraph:
             "final_response": None,
         }
 
+    def run_with_trace(self, scenario: str) -> Tuple[DualOutputResponse, ExecutionTrace]:
+        """Execute the complete Approach B pipeline and return both the response and ExecutionTrace."""
+        t0 = time.perf_counter()
+        output_state = self.graph.invoke(self._initial_state(scenario))
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+        final_response: DualOutputResponse = output_state["final_response"]
+
+        if output_state.get("is_legal", False):
+            nodes_visited = [
+                "guardrail",
+                "decontextualize",
+                "retrieve_and_rerank",
+                "procedural_planner",
+                "verification",
+                "synthesis",
+            ]
+        else:
+            nodes_visited = ["guardrail", "handle_rejection"]
+
+        trace = ExecutionTrace(
+            pipeline_type="proposed_langgraph",
+            nodes_visited=nodes_visited,
+            statute_queries=output_state.get("statute_queries", []),
+            precedent_queries=output_state.get("precedent_queries", []),
+            criminal_route_triggered=bool(output_state.get("criminal_route_triggered", False)),
+            criminal_queries=output_state.get("criminal_queries", []),
+            retrieval_gate_triggered=bool(output_state.get("retrieval_gate_triggered", False)),
+            retrieved_contexts=output_state.get("retrieved_contexts", []),
+        )
+        log_inference_event(
+            scenario=scenario,
+            response=final_response,
+            trace=trace,
+            latency_ms=latency_ms,
+            settings=self.settings,
+        )
+        return final_response, trace
+
     def run(self, scenario: str) -> DualOutputResponse:
         """Execute the complete Approach B pipeline for a given scenario.
 
@@ -235,8 +300,8 @@ class LegalAgentGraph:
         Returns:
             DualOutputResponse with verified action plan and citations.
         """
-        output_state = self.graph.invoke(self._initial_state(scenario))
-        return output_state["final_response"]
+        response, _ = self.run_with_trace(scenario)
+        return response
 
     def stream(self, scenario: str) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """Execute the pipeline node by node, yielding each node's state update as it completes.

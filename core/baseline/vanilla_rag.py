@@ -7,13 +7,14 @@ Implements the single-prompt baseline architecture required for comparative eval
 """
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from openai import OpenAI
 
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.data.ingestion.schema import (
     DocumentType,
     DualOutputResponse,
+    ExecutionTrace,
     LegalDomain,
     PrecedentCitation,
     ProceduralActionStep,
@@ -86,16 +87,8 @@ class VanillaRAGBaseline:
         if self.settings.openai_api_key and self.settings.openai_api_key.get_secret_value():
             self._openai_client = OpenAI(api_key=self.settings.openai_api_key.get_secret_value())
 
-    def run(self, scenario: str, top_k: int = 4) -> DualOutputResponse:
-        """Execute the baseline Vanilla RAG pipeline.
-
-        Args:
-            scenario: Natural language legal scenario narrative.
-            top_k: Number of raw context chunks to retrieve.
-
-        Returns:
-            DualOutputResponse object.
-        """
+    def run_with_trace(self, scenario: str, top_k: int = 4) -> Tuple[DualOutputResponse, ExecutionTrace]:
+        """Execute the baseline Vanilla RAG pipeline and return both response and ExecutionTrace."""
         # 1. Single direct vector embedding
         query_embedding = self.embedder.get_embeddings([scenario])[0]
 
@@ -104,6 +97,17 @@ class VanillaRAGBaseline:
             query_text=scenario,
             query_embedding=query_embedding,
             top_k=top_k,
+        )
+
+        trace = ExecutionTrace(
+            pipeline_type="vanilla_rag",
+            nodes_visited=["embed_query", "hybrid_search", "monolithic_generate"],
+            statute_queries=[scenario],
+            precedent_queries=[],
+            criminal_route_triggered=False,
+            criminal_queries=[],
+            retrieval_gate_triggered=False,
+            retrieved_contexts=retrieved_contexts,
         )
 
         context_block = "\n\n---\n\n".join(
@@ -127,12 +131,25 @@ class VanillaRAGBaseline:
                 )
                 raw_json = response.choices[0].message.content
                 data = json.loads(raw_json)
-                return DualOutputResponse(**data)
+                return DualOutputResponse(**data), trace
             except Exception as e:
                 print(f"[VanillaRAG] OpenAI call failed ({e}). Returning structured fallback.")
 
         # Fallback offline generation based on retrieved contexts
-        return self._generate_fallback_response(scenario, retrieved_contexts)
+        return self._generate_fallback_response(scenario, retrieved_contexts), trace
+
+    def run(self, scenario: str, top_k: int = 4) -> DualOutputResponse:
+        """Execute the baseline Vanilla RAG pipeline.
+
+        Args:
+            scenario: Natural language legal scenario narrative.
+            top_k: Number of raw context chunks to retrieve.
+
+        Returns:
+            DualOutputResponse object.
+        """
+        response, _ = self.run_with_trace(scenario, top_k=top_k)
+        return response
 
     def _generate_fallback_response(
         self, scenario: str, contexts: List[RetrievedContext]

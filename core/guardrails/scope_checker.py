@@ -7,7 +7,7 @@ Classifies valid queries into target Indian legal domains and extracts core fact
 import json
 import re
 from typing import Any, Dict, List, Optional, Tuple
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from openai import OpenAI
 
 from solvemycase.config.settings import Settings, get_settings
@@ -21,6 +21,13 @@ class ScopeCheckResult(BaseModel):
     rejection_reason: Optional[str] = Field(None, description="Reason for rejection if is_legal is False.")
     key_entities: Dict[str, Any] = Field(default_factory=dict, description="Extracted entities (parties, damages, dates).")
     clarification_prompt: Optional[str] = Field(None, description="Guidance to user if query is ambiguous or out of scope.")
+
+    @field_validator("domain", mode="before")
+    @classmethod
+    def _coerce_null_domain(cls, v: Any) -> Any:
+        if v is None or v == "":
+            return LegalDomain.GENERAL_DISPUTE
+        return v
 
 
 SCOPE_CHECK_SYSTEM_PROMPT = """You are an input guardrail for an Indian legal assistance system.

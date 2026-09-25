@@ -17,6 +17,7 @@ ENV/
 data/raw/*.parquet
 data/raw/*.tar
 data/qdrant_storage/
+data/telemetry/
 *.snapshot
 
 # Testing & Coverage

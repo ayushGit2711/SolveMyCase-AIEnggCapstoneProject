@@ -4,7 +4,8 @@ Adheres strictly to the open-india-law unified chunking specification and Pydant
 """
 
 from enum import Enum
-from typing import List, Optional
+import re
+from typing import Any, FrozenSet, List, Optional
 from pydantic import BaseModel, Field, HttpUrl
 
 
@@ -127,3 +128,146 @@ class DualOutputResponse(BaseModel):
         default_factory=list,
         description="Any proposed citations discarded due to lack of strict corpus grounding."
     )
+
+
+class ExecutionTrace(BaseModel):
+    """Structured telemetry and routing trace captured during pipeline execution."""
+
+    pipeline_type: str = Field(..., description="'baseline' or 'proposed'")
+    nodes_visited: List[str] = Field(default_factory=list, description="Ordered list of graph nodes executed.")
+    statute_queries: List[str] = Field(default_factory=list, description="Decontextualized statutory sub-queries.")
+    precedent_queries: List[str] = Field(default_factory=list, description="Decontextualized precedent sub-queries.")
+    criminal_route_triggered: bool = Field(default=False, description="Whether the criminal-code sub-layer ran.")
+    criminal_queries: List[str] = Field(default_factory=list, description="Queries sent to criminal_code_search.")
+    retrieval_gate_triggered: bool = Field(
+        default=False, description="Whether RetrievalQualityGate fired unfiltered fallback retrieval."
+    )
+    retrieved_contexts: List[RetrievedContext] = Field(
+        default_factory=list, description="Final retrieved and reranked context chunks passed to the planner."
+    )
+
+
+REJECTION_SUMMARY_PREFIX = "Query rejected: "
+CLARIFICATION_PREFIX = "Clarification: "
+CRIMINAL_ROUTE_KEYWORDS = (
+    "fir",
+    "police",
+    "arrest",
+    "bail",
+    "accident",
+    "death",
+    "negligen",
+    "hit and run",
+    "cheat",
+    "fraud",
+)
+
+
+def should_trigger_criminal_route(domain: Any, scenario: str) -> bool:
+    """Return True if the domain or scenario text contains criminal-code indicators."""
+    domain_str = domain.value if isinstance(domain, LegalDomain) else str(domain or "")
+    scenario_lower = (scenario or "").lower()
+    return domain_str in (LegalDomain.MOTOR_VEHICLE_ACCIDENT.value, LegalDomain.GENERAL_DISPUTE.value) or any(
+        kw in scenario_lower for kw in CRIMINAL_ROUTE_KEYWORDS
+    )
+
+
+_ACT_STOPWORDS = frozenset({"the", "act", "of", "in", "and", "india", "indian", "code", "law", "laws", "section", "sec"})
+_ACT_ABBREVIATIONS = {
+    "mva": ("motor", "vehicles"),
+    "mv": ("motor", "vehicles"),
+    "bns": ("bharatiya", "nyaya", "sanhita"),
+    "bnss": ("bharatiya", "nagarik", "suraksha", "sanhita"),
+    "ipc": ("penal",),
+    "crpc": ("criminal", "procedure"),
+    "tpa": ("transfer", "property"),
+    "sra": ("specific", "relief"),
+    "cpa": ("consumer", "protection"),
+    "cpc": ("civil", "procedure"),
+    "rera": ("real", "estate", "regulation"),
+}
+
+
+def normalize_section_id(raw_section: Optional[str]) -> str:
+    """Canonicalize a statutory section identifier while preserving parenthesized subsections.
+
+    Examples:
+        'Section 2(11)' -> '2(11)'
+        'Sec. 53-A'     -> '53a'
+        'Section 166'   -> '166'
+        'Order 39 Rule 1' -> '39(1)'
+    """
+    if not raw_section:
+        return ""
+    s = raw_section.strip().lower()
+    order_rule = re.search(r"order\s*(\d+)\s*rule\s*(\d+)", s)
+    if order_rule:
+        return f"{order_rule.group(1)}({order_rule.group(2)})"
+    s = re.sub(r"^(?:sections?|secs?\.?|s\.|rule|art\.?|article)\s*", "", s).strip()
+    # Extract primary section token with optional letter suffix and parenthesized clause
+    m = re.search(r"(\d+\s*-?\s*[a-z]?(?:\(\s*[0-9a-z]+\s*\))?)", s)
+    if not m:
+        return re.sub(r"[^0-9a-z()]", "", s)
+    token = m.group(1)
+    return re.sub(r"[\s\-]", "", token)
+
+
+def sections_match(expected_or_cited: Optional[str], candidate: Optional[str]) -> bool:
+    """Return True if two section strings refer to the same statutory section without prefix collisions.
+
+    Prevents '16' from matching '166' and '2(11)' from matching '2(47)', while allowing
+    a parent section like '166' to match '166(2)' when no subsection was restricted.
+    """
+    a = normalize_section_id(expected_or_cited)
+    b = normalize_section_id(candidate)
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    # Allow parent section '166' to match '166(2)' only when one has no parenthesized clause
+    if "(" not in a and b.startswith(f"{a}("):
+        return True
+    if "(" not in b and a.startswith(f"{b}("):
+        return True
+    return False
+
+
+def extract_significant_act_tokens(act_name: Optional[str]) -> FrozenSet[str]:
+    """Extract normalized, non-trivial statutory title tokens (expanding common legal acronyms)."""
+    if not act_name:
+        return frozenset()
+    words = re.findall(r"[a-z]+", act_name.lower())
+    tokens = set()
+    for w in words:
+        if w in _ACT_ABBREVIATIONS:
+            tokens.update(_ACT_ABBREVIATIONS[w])
+        elif w not in _ACT_STOPWORDS and len(w) > 2:
+            tokens.add(w)
+    return frozenset(tokens)
+
+
+def acts_share_significant_token(act_a: Optional[str], act_b: Optional[str]) -> bool:
+    """Return True when two Act names share at least one meaningful domain token (e.g. 'Motor'/'Vehicles')."""
+    tokens_a = extract_significant_act_tokens(act_a)
+    tokens_b = extract_significant_act_tokens(act_b)
+    if not tokens_a or not tokens_b:
+        return False
+    return bool(tokens_a & tokens_b)
+
+
+def section_mentioned_with_boundary(section_number: Optional[str], text: Optional[str]) -> bool:
+    """Verify if 'Section <N>' appears in text with strict word boundaries (so Section 16 never matches Section 166)."""
+    norm = normalize_section_id(section_number)
+    if not norm or not text:
+        return False
+    escaped = re.escape(norm)
+    # Require negative lookahead for digits, letters, or parenthesized clauses when norm has no parenthesis
+    if "(" in norm:
+        pattern = rf"\b(?:sections?|secs?\.?|s\.)\s*{escaped}(?![0-9a-z])"
+    else:
+        # Also allow optional hyphen before trailing letter (e.g. 53A or 53-A)
+        m = re.match(r"^(\d+)([a-z])$", norm)
+        sec_pat = rf"{m.group(1)}-?{m.group(2)}" if m else escaped
+        pattern = rf"\b(?:sections?|secs?\.?|s\.)\s*{sec_pat}(?![0-9a-z]|\([0-9a-z]+\))"
+    return bool(re.search(pattern, text.lower()))
+

@@ -70,6 +70,11 @@ class Settings(BaseSettings):
         description="Embedding model for generating semantic vector representations.",
     )
 
+    @property
+    def openai_model_mini(self) -> str:
+        """Alias for openai_model_fast ('gpt-4o-mini')."""
+        return self.openai_model_fast
+
     # Vector Database Configuration (Qdrant Embedded / Remote)
     qdrant_path: Path = Field(
         default=Path("data/qdrant_storage"),
@@ -131,6 +136,21 @@ class Settings(BaseSettings):
         default="cross-encoder/ms-marco-MiniLM-L-6-v2",
         validation_alias="CROSS_ENCODER_MODEL",
         description="HuggingFace model ID for cross-encoder reranking.",
+    )
+    retrieval_min_confidence: float = Field(
+        default=0.25,
+        validation_alias="RETRIEVAL_MIN_CONFIDENCE",
+        description="Minimum calibrated top-1 reranker confidence before triggering unfiltered fallback search.",
+    )
+    eval_judge_samples: int = Field(
+        default=1,
+        validation_alias="EVAL_JUDGE_SAMPLES",
+        description="Number of LLM-judge samples per criterion (1 for standard runs, 3 for median variance calibration).",
+    )
+    telemetry_log_path: Path = Field(
+        default=Path("data/telemetry/events.jsonl"),
+        validation_alias="TELEMETRY_LOG_PATH",
+        description="JSONL file path for runtime inference telemetry and drift tracking.",
     )
 
     # Network Service Settings

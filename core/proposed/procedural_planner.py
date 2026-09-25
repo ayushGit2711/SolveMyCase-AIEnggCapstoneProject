@@ -313,11 +313,18 @@ class ProceduralPlannerAgent:
                 ),
             ]
 
-        # Extract mapped citations from context documents
+        # Extract mapped citations from domain-compatible context documents
         statutes: List[StatutoryCitation] = []
         precedents: List[PrecedentCitation] = []
 
         for ctx in contexts:
+            if (
+                domain != LegalDomain.GENERAL_DISPUTE
+                and ctx.domain is not None
+                and ctx.domain not in (domain, LegalDomain.GENERAL_DISPUTE)
+                and ctx.act_category != "criminal"
+            ):
+                continue
             if ctx.doc_type == DocumentType.STATUTE:
                 statutes.append(
                     StatutoryCitation(

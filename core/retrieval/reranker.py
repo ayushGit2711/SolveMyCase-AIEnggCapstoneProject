@@ -4,30 +4,44 @@ Reranks candidate chunks by cross-encoding query and document text pairs,
 sharply boosting precision for both statutory sections and judicial holdings.
 """
 
+import math
 from typing import List, Optional, Tuple
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.data.ingestion.schema import RetrievedContext
+
+
+def _sigmoid(x: float) -> float:
+    """Map an unconstrained logit into [0.0, 1.0] without overflow."""
+    if x >= 0:
+        z = math.exp(-x)
+        return 1.0 / (1.0 + z)
+    z = math.exp(x)
+    return z / (1.0 + z)
+
 
 
 class LegalCrossEncoderReranker:
     """Reranks candidate legal chunks using cross-encoder architecture."""
 
     def __init__(self, settings: Optional[Settings] = None):
+        import threading
         self.settings = settings or get_settings()
         self._cross_encoder = None
         self._load_attempted = False
+        self._lock = threading.Lock()
 
     def _get_encoder(self):
         """Lazy load the cross encoder to avoid slowing down startup."""
-        if not self._load_attempted:
-            self._load_attempted = True
-            try:
-                from sentence_transformers import CrossEncoder
-                self._cross_encoder = CrossEncoder(self.settings.cross_encoder_model)
-                print(f"[Reranker] Loaded CrossEncoder model: {self.settings.cross_encoder_model}")
-            except Exception as err:
-                print(f"[Reranker] Note: sentence-transformers CrossEncoder could not be loaded ({err}). Using lexical cross-scoring.")
-        return self._cross_encoder
+        with self._lock:
+            if not self._load_attempted:
+                self._load_attempted = True
+                try:
+                    from sentence_transformers import CrossEncoder
+                    self._cross_encoder = CrossEncoder(self.settings.cross_encoder_model)
+                    print(f"[Reranker] Loaded CrossEncoder model: {self.settings.cross_encoder_model}")
+                except Exception as err:
+                    print(f"[Reranker] Note: sentence-transformers CrossEncoder could not be loaded ({err}). Using lexical cross-scoring.")
+            return self._cross_encoder
 
     def rerank(
         self, query: str, candidates: List[RetrievedContext], top_k: Optional[int] = None
@@ -51,13 +65,15 @@ class LegalCrossEncoderReranker:
         if encoder is not None:
             try:
                 pairs = [[query, f"{doc.title} {doc.citation_or_section}\n{doc.text}"] for doc in candidates]
-                scores = encoder.predict(pairs)
+                with self._lock:
+                    scores = encoder.predict(pairs)
 
                 scored_candidates: List[Tuple[RetrievedContext, float]] = []
                 for doc, score in zip(candidates, scores):
+                    calibrated = round(_sigmoid(float(score)), 4)
                     cloned = doc.model_copy()
-                    cloned.score = float(score)
-                    scored_candidates.append((cloned, float(score)))
+                    cloned.score = calibrated
+                    scored_candidates.append((cloned, calibrated))
 
                 scored_candidates.sort(key=lambda x: x[1], reverse=True)
                 return [item[0] for item in scored_candidates[:top_k]]

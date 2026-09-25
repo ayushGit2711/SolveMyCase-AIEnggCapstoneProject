@@ -20,6 +20,8 @@ from solvemycase.data.ingestion.schema import (
     LegalPrecedent,
     LegalProvision,
     RetrievedContext,
+    acts_share_significant_token,
+    sections_match,
 )
 
 
@@ -58,6 +60,8 @@ class QdrantLegalStore:
         self.collection_name = self.settings.qdrant_collection_name
         self.corpus_documents: List[RetrievedContext] = []
         self.bm25_index: Optional[BM25Okapi] = None
+        import threading
+        self._lock = threading.Lock()
 
         if in_memory:
             self.client = QdrantClient(location=":memory:")
@@ -229,23 +233,24 @@ class QdrantLegalStore:
                 must=[qmodels.FieldCondition(key="domain", match=qmodels.MatchValue(value=domain_filter.value))]
             )
 
-        try:
-            # Qdrant client query points
-            search_response = self.client.query_points(
-                collection_name=self.collection_name,
-                query=query_embedding,
-                query_filter=query_filter,
-                limit=top_k * 2,
-            )
-            dense_hits = search_response.points
-        except Exception:
-            # Fallback for search API variant
-            dense_hits = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=query_embedding,
-                query_filter=query_filter,
-                limit=top_k * 2,
-            )
+        with self._lock:
+            try:
+                # Qdrant client query points
+                search_response = self.client.query_points(
+                    collection_name=self.collection_name,
+                    query=query_embedding,
+                    query_filter=query_filter,
+                    limit=top_k * 2,
+                )
+                dense_hits = search_response.points
+            except Exception:
+                # Fallback for search API variant
+                dense_hits = self.client.search(
+                    collection_name=self.collection_name,
+                    query_vector=query_embedding,
+                    query_filter=query_filter,
+                    limit=top_k * 2,
+                )
 
         dense_ranks: Dict[str, int] = {}
         for rank, hit in enumerate(dense_hits):
@@ -323,21 +328,22 @@ class QdrantLegalStore:
             must=[qmodels.FieldCondition(key="act_category", match=qmodels.MatchValue(value="criminal"))]
         )
 
-        try:
-            search_response = self.client.query_points(
-                collection_name=self.collection_name,
-                query=query_embedding,
-                query_filter=query_filter,
-                limit=top_k * 2,
-            )
-            dense_hits = search_response.points
-        except Exception:
-            dense_hits = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=query_embedding,
-                query_filter=query_filter,
-                limit=top_k * 2,
-            )
+        with self._lock:
+            try:
+                search_response = self.client.query_points(
+                    collection_name=self.collection_name,
+                    query=query_embedding,
+                    query_filter=query_filter,
+                    limit=top_k * 2,
+                )
+                dense_hits = search_response.points
+            except Exception:
+                dense_hits = self.client.search(
+                    collection_name=self.collection_name,
+                    query_vector=query_embedding,
+                    query_filter=query_filter,
+                    limit=top_k * 2,
+                )
 
         dense_ranks: Dict[str, int] = {}
         for rank, hit in enumerate(dense_hits):
@@ -408,18 +414,15 @@ class QdrantLegalStore:
         Returns:
             List of matching RetrievedContext instances.
         """
-        sec_clean = section_number.strip().lower().replace("section", "").replace("sec", "").replace(".", "").strip()
         matched: List[RetrievedContext] = []
 
         for doc in self.corpus_documents:
             if doc.doc_type != DocumentType.STATUTE:
                 continue
-            doc_sec = doc.citation_or_section.lower().replace("section", "").replace("sec", "").replace(".", "").strip()
-            if doc_sec == sec_clean:
+            if sections_match(section_number, doc.citation_or_section):
                 if act_name_pattern:
-                    pattern = act_name_pattern.lower()
-                    doc_act = (doc.act_name or doc.title).lower()
-                    if pattern in doc_act or any(word in doc_act for word in pattern.split() if len(word) > 3):
+                    doc_act = doc.act_name or doc.title
+                    if acts_share_significant_token(act_name_pattern, doc_act) or act_name_pattern.lower() in doc_act.lower():
                         matched.append(doc)
                 else:
                     matched.append(doc)

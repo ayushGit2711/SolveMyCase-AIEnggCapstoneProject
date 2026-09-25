@@ -552,6 +552,19 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
 ]
 
 
+def _compute_expects_criminal_route(item: Dict[str, Any]) -> bool:
+    """Determine whether a benchmark scenario is expected to trigger criminal code deep RAG."""
+    from solvemycase.data.ingestion.schema import should_trigger_criminal_route
+
+    if not item.get("is_legal", True):
+        return False
+    return should_trigger_criminal_route(item.get("domain", ""), str(item.get("scenario", "")))
+
+
+for _item in BENCHMARK_SCENARIOS:
+    _item.setdefault("expects_criminal_route", _compute_expects_criminal_route(_item))
+
+
 def generate_benchmark_file(output_path: Path) -> int:
     """Write benchmark dataset to JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)

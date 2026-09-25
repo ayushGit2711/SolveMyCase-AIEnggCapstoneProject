@@ -21,7 +21,8 @@
       "FIR",
       "Medical records",
       "MACT claim petition"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_002",
@@ -42,7 +43,8 @@
       "FIR",
       "Post-mortem report",
       "Hit and Run compensation application"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_003",
@@ -62,7 +64,8 @@
       "GD Entry or FIR",
       "Driver license copy",
       "MACT claim against owner"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_004",
@@ -82,7 +85,8 @@
       "FIR under BNS 281",
       "Disability certificate",
       "Section 166 claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_005",
@@ -102,7 +106,8 @@
       "FIR",
       "Sarla Verma multiplier calculation",
       "MACT petition"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_006",
@@ -122,7 +127,8 @@
       "FIR",
       "Implead both driver and aggregator",
       "MACT claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_007",
@@ -142,7 +148,8 @@
       "Medical board disability certificate",
       "Income tax returns proof",
       "Section 166 petition"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_008",
@@ -163,7 +170,8 @@
       "Breathalyzer record",
       "FIR copy",
       "MACT claim against driver and insurer"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_009",
@@ -183,7 +191,8 @@
       "CCTV footage request",
       "FIR against driver and conductor",
       "Section 166 claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_010",
@@ -203,7 +212,8 @@
       "FIR under S.199A MVA",
       "Implead vehicle registered owner",
       "MACT claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_011",
@@ -221,7 +231,8 @@
       "File at place of accident or claimant residence under S.166(2)",
       "FIR",
       "Insurance notice"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_012",
@@ -240,7 +251,8 @@
       "Property evaluation report",
       "Police panchnama",
       "Section 166 third party property claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_013",
@@ -261,7 +273,8 @@
       "FIR against school management and driver",
       "Motor vehicle inspection report",
       "MACT claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_014",
@@ -281,7 +294,8 @@
       "Emergency MLC in hospital",
       "Hit and Run FIR",
       "District Magistrate Solatium claim"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "mva_015",
@@ -302,7 +316,8 @@
       "Policy terms review",
       "Pay and Recover doctrine submission",
       "MACT claim against owner"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "prop_001",
@@ -323,7 +338,8 @@
       "Legal notice",
       "Suit for declaration and possession",
       "Section 53A part performance defence"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_002",
@@ -343,7 +359,8 @@
       "15-day eviction notice under S.106 TPA",
       "Arrears calculation",
       "Suit for ejectment"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_003",
@@ -362,7 +379,8 @@
       "Site photographs",
       "Municipal stop-work complaint",
       "Suit for permanent & mandatory injunction"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_004",
@@ -383,7 +401,8 @@
       "Legal notice readiness to pay",
       "Suit for specific performance of contract",
       "Injunction restraining 3rd party creation"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_005",
@@ -400,7 +419,8 @@
     "critical_steps": [
       "File summary suit under Section 6 SRA within 6 months of dispossession",
       "Possession proof"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_006",
@@ -421,7 +441,8 @@
       "Suit for cancellation of forged gift deed",
       "Partition suit",
       "FIR for forgery & cheating"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_007",
@@ -441,7 +462,8 @@
       "Police complaint for illegal lock-out",
       "Summary suit under Section 6 SRA",
       "Inventory commissioner application"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_008",
@@ -459,7 +481,8 @@
       "Legal notice for amicable division",
       "Suit for partition by metes and bounds",
       "Injunction against alienation"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_009",
@@ -479,7 +502,8 @@
       "Immediate ex-parte ad-interim injunction under Order 39",
       "Structural engineer safety report",
       "Municipal inspection"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_010",
@@ -498,7 +522,8 @@
       "Bank transfer payment receipts",
       "Suit for declaration of tenancy rights and damages",
       "Local commissioner appointment"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_011",
@@ -516,7 +541,8 @@
       "Society bye-laws review",
       "Notice to Registrar of Societies",
       "Injunction restraining discriminatory restriction"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_012",
@@ -536,7 +562,8 @@
       "Search report of encumbrance",
       "Criminal complaint for cheating",
       "Suit for recovery of earnest money with interest"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_013",
@@ -555,7 +582,8 @@
       "Title deed verification",
       "Statutory notice under S.80 CPC",
       "Mandatory injunction or Article 226 writ"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_014",
@@ -574,7 +602,8 @@
       "Time is essence clause review",
       "Forfeiture legal notice",
       "Suit for declaration / rescission"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "prop_015",
@@ -594,7 +623,8 @@
       "Land boundary survey",
       "Police complaint for criminal trespass under BNS 329",
       "Suit for permanent injunction with ad-interim stay"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_001",
@@ -617,7 +647,8 @@
       "Grievance on NCH / INGRAM",
       "Formal legal notice",
       "Section 35 Consumer Complaint"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_002",
@@ -639,7 +670,8 @@
       "Builder buyer agreement review",
       "Experion Developers precedent citation",
       "Consumer complaint for refund with interest"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_003",
@@ -660,7 +692,8 @@
       "Fire brigade report",
       "Automobile product liability action under S.84",
       "Consumer complaint for full vehicle replacement and damages"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "cpa_004",
@@ -680,7 +713,8 @@
       "Hospital discharge summary",
       "Representation to Insurance Ombudsman",
       "Section 35 Consumer Complaint for deficiency"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_005",
@@ -700,7 +734,8 @@
       "Boarding pass and booking invoices",
       "DGCA Air Passenger Charter notice",
       "Consumer forum petition for compensation"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_006",
@@ -720,7 +755,8 @@
       "Hospital medication chart",
       "Expert medical negligence opinion",
       "Consumer complaint for medical negligence"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_007",
@@ -741,7 +777,8 @@
       "Admission receipt & cancellation request",
       "CCPA coaching fee refund guidelines notice",
       "Consumer complaint"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_008",
@@ -761,7 +798,8 @@
       "Service job card",
       "Independent laboratory oil sample analysis",
       "Consumer complaint for deficiency & product liability"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_009",
@@ -781,7 +819,8 @@
       "Cyber cell police report",
       "RBI zero-liability customer circular citation",
       "Banking Ombudsman complaint / DCDRC"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_010",
@@ -801,7 +840,8 @@
       "Order invoice and food delivery photos",
       "Doctor prescription and medical bills",
       "Consumer complaint for product liability and religious hurt"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_011",
@@ -820,7 +860,8 @@
       "Booking confirmation email",
       "Airport denied boarding slip",
       "Consumer claim for fare difference and mental agony"
-    ]
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "cpa_012",
@@ -841,7 +882,8 @@
       "Product packaging evidence",
       "Class action complaint to CCPA under S.10",
       "DCDRC claim"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_013",
@@ -862,7 +904,8 @@
       "Itemized bill audit",
       "Appellate authority notice",
       "Consumer complaint for unfair trade practice"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_014",
@@ -881,7 +924,8 @@
       "Warranty card and purchase invoice",
       "Customer service ticket logs",
       "Section 35 Consumer Complaint for refund"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_015",
@@ -901,7 +945,8 @@
       "Purchase bill of garment",
       "Receipt showing unconscionable limitation of liability",
       "Consumer complaint for full value compensation"
-    ]
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_001",
@@ -911,7 +956,8 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_002",
@@ -921,7 +967,8 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_003",
@@ -931,7 +978,8 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_004",
@@ -941,7 +989,8 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_005",
@@ -951,7 +1000,8 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_006",
@@ -961,7 +1011,8 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   },
   {
     "id": "guardrail_007",
@@ -971,6 +1022,7 @@
     "expected_act": null,
     "expected_sections": [],
     "expected_forum": [],
-    "critical_steps": []
+    "critical_steps": [],
+    "expects_criminal_route": false
   }
 ]
