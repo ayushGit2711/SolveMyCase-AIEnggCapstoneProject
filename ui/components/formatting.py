@@ -140,13 +140,23 @@ def removed_references(response: DualOutputResponse) -> List[str]:
     return [item for item in response.unverified_citations_stripped if not item.startswith(CLARIFICATION_PREFIX)]
 
 
+_LEGACY_INDIACODE_HOSTS = {"www.indiacode.nic.in", "indiacode.nic.in", "www.indiacode.gov.in"}
+
+
 def safe_http_url(url: Optional[str]) -> Optional[str]:
-    """Return the URL only if it is an absolute http(s) link, else None (avoids javascript: etc.)."""
+    """Return the URL only if it is an absolute http(s) link, else None (avoids javascript: etc.).
+
+    Also rewrites legacy India Code hosts (www.indiacode.nic.in / www.indiacode.gov.in) to
+    https://indiacode.gov.in, where the live DSpace server responds.
+    """
     if not url:
         return None
-    parsed = urlparse(url.strip())
+    cleaned = url.strip()
+    parsed = urlparse(cleaned)
     if parsed.scheme in {"http", "https"} and parsed.netloc:
-        return url.strip()
+        if parsed.netloc.lower() in _LEGACY_INDIACODE_HOSTS:
+            return parsed._replace(scheme="https", netloc="indiacode.gov.in").geturl()
+        return cleaned
     return None
 
 

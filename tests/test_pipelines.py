@@ -91,7 +91,7 @@ def test_verification_node_strips_hallucinated_citations():
             title="Bharatiya Nyaya Sanhita, 2023 - Section 106",
             citation_or_section="Section 106",
             text="Causing death by negligence... rash and negligent driving of vehicle",
-            source_url="https://www.indiacode.nic.in/handle/123456789/20062",
+            source_url="https://indiacode.gov.in/handle/123456789/20062",
             act_name="Bharatiya Nyaya Sanhita, 2023",
             score=0.9,
         )
@@ -163,7 +163,7 @@ def test_verification_node_strips_hallucinated_citations():
     verified_statutes = audit["verified_statutory_citations"]
     assert len(verified_statutes) == 1
     assert verified_statutes[0].section_number == "106"
-    assert verified_statutes[0].source_url == "https://www.indiacode.nic.in/handle/123456789/20062"
+    assert verified_statutes[0].source_url == "https://indiacode.gov.in/handle/123456789/20062"
 
     # Assert that the action step with stripped citation basis had its basis sanitized
     assert audit["verified_action_plan"][0].statutory_basis is None

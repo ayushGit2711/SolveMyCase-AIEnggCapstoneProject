@@ -59,7 +59,7 @@ def _response(**overrides):
                 section_number="166",
                 summary_of_provision="Claim application",
                 applicability_to_scenario="Compensation",
-                source_url="https://www.indiacode.nic.in/x",
+                source_url="https://indiacode.gov.in/x",
             )
         ],
         precedent_citations=[
@@ -109,7 +109,7 @@ def test_rejection_helpers():
 
 
 def test_safe_http_url_blocks_non_http_schemes():
-    assert safe_http_url("https://www.indiacode.nic.in/a") == "https://www.indiacode.nic.in/a"
+    assert safe_http_url("https://indiacode.gov.in/a") == "https://indiacode.gov.in/a"
     assert safe_http_url("javascript:alert(1)") is None
     assert safe_http_url("/relative/path") is None
     assert safe_http_url(None) is None
@@ -187,5 +187,5 @@ def test_precedent_links_prefer_stored_source_then_title_search():
 def test_response_to_markdown_includes_working_links():
     md = response_to_markdown("x" * 20, _response(), generated_on=date(2026, 1, 2))
     assert "[Indian Kanoon](https://indiankanoon.org/search/?formInput=Section+166+in+Motor+Vehicles+Act%2C+1988)" in md
-    assert "[India Code](https://www.indiacode.nic.in/x)" in md
+    assert "[India Code](https://indiacode.gov.in/x)" in md
     assert "[Read judgment](https://main.sci.gov.in/y)" in md
