@@ -169,8 +169,10 @@ def test_verified_citation_count_sums_statutes_and_precedents():
 
 
 def test_statute_search_url_targets_exact_section():
-    assert statute_search_url("Motor Vehicles Act, 1988", "166") == (
-        "https://indiankanoon.org/search/?formInput=Section+166+in+Motor+Vehicles+Act%2C+1988"
+    assert statute_search_url("Motor Vehicles Act, 1988", "166") == "https://indiankanoon.org/doc/136948773/"
+    assert statute_search_url("Motor Vehicles Act, 1988", "Section 166") == "https://indiankanoon.org/doc/136948773/"
+    assert statute_search_url("Arbitration Act, 1996", "11") == (
+        "https://indiankanoon.org/search/?formInput=Section+11+in+Arbitration+Act%2C+1996+doctypes%3Alaws"
     )
     assert statute_search_url("", "166") is None
     assert statute_search_url("Motor Vehicles Act, 1988", None) is None
@@ -178,14 +180,14 @@ def test_statute_search_url_targets_exact_section():
 
 def test_precedent_links_prefer_stored_source_then_title_search():
     assert precedent_read_url("https://indiankanoon.org/doc/837924/", "Sarla Verma") == "https://indiankanoon.org/doc/837924/"
-    fallback = "https://indiankanoon.org/search/?formInput=title%3A+Sarla+Verma+v.+DTC"
-    assert precedent_search_url("  Sarla Verma   v. DTC ") == fallback
-    assert precedent_read_url("javascript:alert(1)", "Sarla Verma v. DTC") == fallback
+    fallback = "https://indiankanoon.org/search/?formInput=title%3A+Unknown+Case+v.+DTC"
+    assert precedent_search_url("  Unknown Case   v. DTC ") == fallback
+    assert precedent_read_url("javascript:alert(1)", "Unknown Case v. DTC") == fallback
     assert precedent_read_url(None, "") is None
 
 
 def test_response_to_markdown_includes_working_links():
     md = response_to_markdown("x" * 20, _response(), generated_on=date(2026, 1, 2))
-    assert "[Indian Kanoon](https://indiankanoon.org/search/?formInput=Section+166+in+Motor+Vehicles+Act%2C+1988)" in md
-    assert "[India Code](https://indiacode.gov.in/x)" in md
-    assert "[Read judgment](https://main.sci.gov.in/y)" in md
+    assert "[Indian Kanoon](https://indiankanoon.org/doc/136948773/)" in md
+    assert "[India Code](https://indiacode.gov.in/handle/123456789/523268)" in md
+    assert "[Read judgment](https://indiankanoon.org/doc/837924/)" in md

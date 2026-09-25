@@ -6,7 +6,9 @@ import streamlit as st
 
 from solvemycase.data.ingestion.schema import PrecedentCitation, StatutoryCitation
 from solvemycase.ui.components.formatting import (
+    clean_section_label,
     escape_markdown,
+    official_statute_url,
     precedent_read_url,
     safe_http_url,
     statute_search_url,
@@ -23,7 +25,7 @@ def _link(url: Optional[str], label: str, key: str, container=st) -> None:
 def _statute_links(cit: StatutoryCitation, key: str) -> None:
     """Primary Indian Kanoon link plus the official India Code page when one is stored."""
     primary = statute_search_url(cit.act_name, cit.section_number)
-    official = safe_http_url(cit.source_url)
+    official = official_statute_url(cit.act_name, cit.section_number, cit.source_url)
     col_primary, col_official = st.columns(2)
     _link(primary, "Read on Indian Kanoon ↗", key=f"{key}_ik", container=col_primary)
     if official and official != primary:
@@ -49,7 +51,8 @@ def render_citations(
     if statutes:
         st.markdown("##### Laws that apply")
         for i, cit in enumerate(statutes):
-            with st.expander(escape_markdown(f"{cit.act_name} · Section {cit.section_number}")):
+            sec_label = clean_section_label(cit.section_number) or cit.section_number
+            with st.expander(escape_markdown(f"{cit.act_name} · Section {sec_label}")):
                 st.markdown(escape_markdown(cit.summary_of_provision))
                 if cit.applicability_to_scenario:
                     st.caption(f"**Why it applies:** {escape_markdown(cit.applicability_to_scenario)}")
@@ -62,4 +65,8 @@ def render_citations(
             with st.expander(escape_markdown(f"{prec.case_title} {ref}".strip())):
                 st.caption(escape_markdown(prec.court))
                 st.markdown(escape_markdown(prec.legal_principle))
-                _link(precedent_read_url(prec.source_url, prec.case_title), "Read judgment ↗", key=f"{key_prefix}_prec_{i}")
+                _link(
+                    precedent_read_url(prec.source_url, prec.case_title, is_verified=prec.is_verified),
+                    "Read judgment ↗",
+                    key=f"{key_prefix}_prec_{i}",
+                )

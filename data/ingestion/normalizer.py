@@ -183,7 +183,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "by conveying him to the nearest medical practitioner or hospital; (b) give on demand by a police officer any information required; "
             "(c) report the circumstances of occurrence, including the date, time and place of the accident, to the nearest police station within twenty-four hours."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/523232",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -195,12 +195,14 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
         "section_number": "166",
         "title": "Application for compensation",
         "text": (
-            "An application for compensation arising out of an accident of the nature specified in sub-section (1) of section 165 may be made: "
-            "(a) by the person who has sustained the injury; or (b) by the owner of the property; or (c) where death has resulted from the accident, "
+            "An application for compensation arising out of a motor vehicle accident of the nature specified in sub-section (1) of section 165 "
+            "(including claims for bodily injury, medical bills, hospital expenses, loss of income, and third-party vehicle repair or property damage "
+            "when the offending vehicle owner or their insurance company / insurer refuses to pay) may be made: "
+            "(a) by the person who has sustained the injury; or (b) by the owner of the damaged property/vehicle; or (c) where death has resulted from the accident, "
             "by all or any of the legal representatives of the deceased; or (d) by any agent duly authorised by the person injured or all or any of the "
-            "legal representatives of the deceased. Must be filed before the Claims Tribunal having jurisdiction over the place of accident or where the claimant resides."
+            "legal representatives of the deceased. Must be filed before the Motor Accidents Claims Tribunal (MACT) having jurisdiction over the place of accident or where the claimant resides."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/523268",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -216,7 +218,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "A sum of two lakh rupees or such higher amount as may be prescribed by the Central Government in respect of the death of any person, and "
             "fifty thousand rupees in respect of grievous hurt to any person."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/523262",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -234,7 +236,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "(2) Whoever causes the death of any person by rash and negligent driving of vehicle not amounting to culpable homicide, and escapes without "
             "reporting it to a police officer or a Magistrate soon after the incident, shall be punished with imprisonment of either description of a term which may extend to ten years, and shall also be liable to fine."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20062",
+        "source_url": "https://indiacode.gov.in/handle/123456789/545604",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -249,7 +251,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Whoever drives any vehicle, or rides, on any public way in a manner so rash or negligent as to endanger human life, or to be likely to cause hurt or injury to any other person, "
             "shall be punished with imprisonment of either description for a term which may extend to six months, or with fine which may extend to one thousand rupees, or with both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20062",
+        "source_url": "https://indiacode.gov.in/handle/123456789/545772",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -264,7 +266,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Whoever commits mischief by doing any act which causes, or which he knows to be likely to cause, a diminution of the supply of water or damage to property "
             "shall be punished with imprisonment of either description for a term which may extend to five years, or with fine, or with both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20062",
+        "source_url": "https://indiacode.gov.in/handle/123456789/545814",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -279,7 +281,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Whoever cheats and thereby dishonestly induces the person deceived to deliver any property to any person, or to make, alter or destroy the whole or any part of a valuable security, "
             "shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20062",
+        "source_url": "https://indiacode.gov.in/handle/123456789/545810",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.CONSUMER_RIGHTS,
@@ -295,7 +297,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Every information relating to the commission of a cognizable offence, if given orally to an officer in charge of a police station, shall be reduced to writing by him or under his direction, "
             "and be read over to the informant; and every such information shall be signed by the person giving it. Information may be given electronically (e-FIR) subject to physical signature within three days."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20063",
+        "source_url": "https://indiacode.gov.in/handle/123456789/546648",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -311,7 +313,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "to a Magistrate empowered to take cognizance of the offence on a police report, a report in the form prescribed by the State Government, setting forth the names of parties, "
             "nature of information, and whether any offence appears to have been committed."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20063",
+        "source_url": "https://indiacode.gov.in/handle/123456789/546293",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -326,7 +328,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "When any person accused of, or suspected of, the commission of any non-bailable offence is arrested or detained without warrant by an officer in charge of a police station "
             "or appears or is brought before a Court, he may be released on bail, but he shall not be so released if there appear reasonable grounds for believing that he has been guilty of an offence punishable with death or imprisonment for life."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20063",
+        "source_url": "https://indiacode.gov.in/handle/123456789/546565",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -342,7 +344,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Whoever drives any vehicle, or rides, on any public way in a manner so rash or negligent as to endanger human life, or to be likely to cause hurt or injury to any other person, "
             "shall be punished with imprisonment of either description for a term which may extend to six months, or with fine which may extend to one thousand rupees, or with both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2263",
+        "source_url": "https://indiacode.gov.in/handle/123456789/549142",
         "jurisdiction": "Central",
         "year": 1860,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -357,7 +359,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Whoever causes the death of any person by doing any rash or negligent act not amounting to culpable homicide, shall be punished with "
             "imprisonment of either description for a term which may extend to two years, or with fine, or with both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2263",
+        "source_url": "https://indiacode.gov.in/handle/123456789/549142",
         "jurisdiction": "Central",
         "year": 1860,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -373,7 +375,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Every information relating to the commission of a cognizable offence, if given orally to an officer in charge of a police station, shall be reduced to writing by him or under his direction, "
             "and be read over to the informant; and every such information, whether given in writing or reduced to writing as aforesaid, shall be signed by the person giving it."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1611",
+        "source_url": "https://indiacode.gov.in/handle/123456789/620185",
         "jurisdiction": "Central",
         "year": 1973,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -390,7 +392,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Such transfer, in the case of tangible immovable property of the value of one hundred rupees and upwards, or in the case of a reversion or other intangible thing, "
             "can be made only by a registered instrument. A contract for sale does not, of itself, create any interest in or charge on such property."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535222",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -406,7 +408,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "terminable, on the part of either lessor or lessee, by six months' notice; and a lease of immovable property for any other purpose shall be deemed to be a lease from month to month, "
             "terminable, on the part of either lessor or lessee, by fifteen days' notice. Notice must be in writing and duly served."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535285",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -422,7 +424,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "If any person is dispossessed without his consent of immovable property otherwise than in due course of law, he or any person through whom he has been in possession or any person claiming "
             "through him may, by suit, recover possession thereof, notwithstanding any other title that may be set up in such suit. No suit under this section shall be brought after the expiry of six months from the date of dispossession."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1583",
+        "source_url": "https://indiacode.gov.in/handle/123456789/524827",
         "jurisdiction": "Central",
         "year": 1963,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -437,7 +439,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Subject to the other provisions contained in or referred to by this Chapter, a perpetual injunction may be granted to the plaintiff to prevent the breach of an obligation existing in his favour, "
             "whether expressly or by implication. When the defendant invades or threatens to invade the plaintiff's right to, or enjoyment of, property, the court may grant a perpetual injunction."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1583",
+        "source_url": "https://indiacode.gov.in/handle/123456789/524862",
         "jurisdiction": "Central",
         "year": 1963,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -454,7 +456,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "or has been undertaken to be performed by a person in pursuance of a contract or otherwise in relation to any service and includes: (i) any act of negligence or omission or commission by such person; "
             "(ii) deliberate withholding of relevant information by such person to the consumer."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/15256",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538576",
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
@@ -470,7 +472,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "(a) the consumer; (b) any recognised consumer association; (c) one or more consumers having the same interest. "
             "District Commission has jurisdiction for value of goods/services up to fifty lakh rupees (revised limits). Limitation period is two years from cause of action under Section 69."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/15256",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538611",
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
@@ -486,7 +488,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "(b) the product is defective in design; (c) there is a deviation from manufacturing specifications; (d) the product does not conform to the express warranty; "
             "(e) the product fails to contain adequate instructions for correct usage to prevent any harm or any warning regarding improper or incorrect usage."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/15256",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538685",
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
@@ -503,7 +505,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "(MACT) for such area as may be specified for the purpose of adjudicating upon claims for compensation in respect of accidents "
             "involving the death of, or bodily injury to, persons arising out of the use of motor vehicles, or damages to any property of a third party so arising, or both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/523267",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -519,7 +521,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "detected in a test by a breath analyser or any other test including a laboratory test, or (b) is under the influence of a drug to such an extent "
             "as to be incapable of exercising proper control over the vehicle, shall be punishable for the first offence with imprisonment up to six months or fine of ten thousand rupees, or both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/523290",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -535,7 +537,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "(necessity for insurance against third party risk) shall be punishable for the first offence with imprisonment which may extend to three months, "
             "or with fine of two thousand rupees, or with both; and the registered owner remains personally liable for third-party compensation before the MACT."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/523303",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -551,7 +553,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "shall be deemed to be guilty of the contravention and shall be liable to be proceeded against and punished accordingly with imprisonment up to three years "
             "and fine of twenty-five thousand rupees, and the registration of the motor vehicle shall be cancelled for twelve months."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1798?view_type=browse&sam_handle=123456789/1362",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538138",
         "jurisdiction": "Central",
         "year": 1988,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -567,7 +569,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Whoever is guilty of rioting or unlawful group coercion involving force or violence against property or persons shall be punished "
             "with imprisonment of either description for a term which may extend to two years, or with fine, or with both."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20062",
+        "source_url": "https://indiacode.gov.in/handle/123456789/545857",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -582,7 +584,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "If an offence is committed by any member of an unlawful assembly in prosecution of the common object of that assembly, "
             "every person who, at the time of the committing of that offence, is a member of the same assembly, is guilty of that offence."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/20062",
+        "source_url": "https://indiacode.gov.in/handle/123456789/545649",
         "jurisdiction": "Central",
         "year": 2023,
         "domain": LegalDomain.MOTOR_VEHICLE_ACCIDENT,
@@ -598,7 +600,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Where property is transferred subject to a condition or limitation absolutely restraining the transferee or any person claiming under him "
             "from parting with or disposing of his interest in the property, the condition or limitation is void, except in the case of a lease where the condition is for the benefit of the lessor."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535176",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -613,7 +615,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Subject to the provisions of section 12, on a transfer of property an interest therein may be created with the superadded condition "
             "that it shall cease to exist in case a specified uncertain event shall happen, or in case a specified uncertain event shall not happen."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535324",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -629,7 +631,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "the transferee acquires as to such share or interest, and so far as is necessary to give effect to the transfer, the transferor's right to joint possession "
             "or other common or part enjoyment of the property, and to enforce a partition of the same, subject to protection of an undivided family dwelling-house."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535210",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -645,7 +647,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "necessary to constitute the transfer can be ascertained with reasonable certainty, and the transferee has, in part performance of the contract, "
             "taken possession of the property and performed or is willing to perform his part of the contract, the transferor is debarred from enforcing against the transferee any right in respect of the property."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535221",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -660,7 +662,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "In the absence of a contract to the contrary, the seller is bound to disclose to the buyer any material defect in the property or in the seller's title thereto, "
             "produce title documents for examination, execute a proper conveyance on payment of the price, give possession, and pay all public charges and encumbrances accrued up to the date of sale."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535223",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -675,7 +677,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "A lease of immovable property from year to year, or for any term exceeding one year, or reserving a yearly rent, can be made only by a registered instrument. "
             "All other leases of immovable property may be made either by a registered instrument or by oral agreement accompanied by delivery of possession."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535286",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -690,7 +692,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "A lease of immovable property determines: (a) by efflux of the time limited thereby; (b) where such time is limited conditionally on the happening of some event; "
             "(g) by forfeiture; or (h) on the expiration of a notice to determine the lease, or to quit, or of intention to quit, the property leased, duly given by one party to the other."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535290",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -705,7 +707,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Gift is the transfer of certain existing movable or immovable property made voluntarily and without consideration, by one person, called the donor, "
             "to another, called the donee, and accepted by or on behalf of the donee during the lifetime of the donor and while he is still capable of giving."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535303",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -720,7 +722,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "For the purpose of making a gift of immovable property, the transfer must be effected by a registered instrument signed by or on behalf of the donor, "
             "and attested by at least two witnesses. For the purpose of making a gift of movable property, the transfer may be effected either by a registered instrument or by delivery."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/2338",
+        "source_url": "https://indiacode.gov.in/handle/123456789/535304",
         "jurisdiction": "Central",
         "year": 1882,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -736,7 +738,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "Specific performance of a contract cannot be enforced in favour of a person who fails to prove that he has performed or has always been ready and willing "
             "to perform the essential terms of the contract which are to be performed by him, other than terms the performance of which has been prevented or waived by the defendant."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1583",
+        "source_url": "https://indiacode.gov.in/handle/123456789/524838",
         "jurisdiction": "Central",
         "year": 1963,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -751,7 +753,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "When, to prevent the breach of an obligation, it is necessary to compel the performance of certain acts which the court is capable of enforcing, "
             "the court may in its discretion grant an injunction to prevent the breach complained of, and also to compel performance of the requisite acts, including demolition of unauthorized encroachment."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/1583",
+        "source_url": "https://indiacode.gov.in/handle/123456789/524863",
         "jurisdiction": "Central",
         "year": 1963,
         "domain": LegalDomain.PROPERTY_CONFLICT,
@@ -768,7 +770,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "adopts any unfair method or unfair or deceptive practice including false representation of standard or quality, refusing to take back defective goods or refund consideration, "
             "imposing one-sided penalty clauses, or disclosing consumer personal information."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/15256",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538576",
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
@@ -784,7 +786,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "nature or manner of performance; or (b) there was an act of omission or commission or negligence or conscious withholding any information which caused harm; "
             "or (c) it did not issue adequate instructions or warnings to prevent any harm; or (d) the service did not conform to express warranty or terms and conditions."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/15256",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538658",
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,
@@ -800,7 +802,7 @@ FALLBACK_PROVISIONS: List[Dict[str, any]] = [
             "shall be punished with imprisonment for a term which may extend to two years and with fine which may extend to ten lakh rupees; and for every subsequent offence, "
             "with imprisonment up to five years and fine up to fifty lakh rupees."
         ),
-        "source_url": "https://indiacode.gov.in/handle/123456789/15256",
+        "source_url": "https://indiacode.gov.in/handle/123456789/538662",
         "jurisdiction": "Central",
         "year": 2019,
         "domain": LegalDomain.CONSUMER_RIGHTS,

@@ -16,7 +16,7 @@ def test_default_settings():
     assert settings.verification_strict_mode is True
     assert settings.max_hallucination_retries == 2
     assert settings.max_retrieved_chunks == 8
-    assert settings.rerank_top_k == 4
+    assert settings.rerank_top_k == 6
     assert settings.api_port == 8000
     assert settings.ui_port == 8501
 

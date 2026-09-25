@@ -128,7 +128,7 @@ class Settings(BaseSettings):
         description="Number of candidate documents fetched from hybrid BM25 + dense search.",
     )
     rerank_top_k: int = Field(
-        default=4,
+        default=6,
         validation_alias="RERANK_TOP_K",
         description="Final number of top-ranked context documents fed to the planner.",
     )

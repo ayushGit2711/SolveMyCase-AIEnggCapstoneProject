@@ -12,6 +12,7 @@ from solvemycase.ui.components.formatting import (
     group_steps_by_phase,
     has_real_deadline,
     markdown_table_cell,
+    official_statute_url,
     precedent_read_url,
     safe_http_url,
     statute_search_url,
@@ -73,7 +74,7 @@ def response_to_markdown(scenario: str, response: DualOutputResponse, generated_
             kanoon = statute_search_url(cit.act_name, cit.section_number)
             if kanoon:
                 links.append(f"[Indian Kanoon]({kanoon})")
-            official = safe_http_url(cit.source_url)
+            official = official_statute_url(cit.act_name, cit.section_number, cit.source_url)
             if official:
                 links.append(f"[India Code]({official})")
             suffix = f" ({' · '.join(links)})" if links else ""
@@ -84,7 +85,7 @@ def response_to_markdown(scenario: str, response: DualOutputResponse, generated_
         lines += ["## Verified court judgments", ""]
         for prec in response.precedent_citations:
             ref = prec.citation or (str(prec.year) if prec.year else "")
-            read_url = precedent_read_url(prec.source_url, prec.case_title)
+            read_url = precedent_read_url(prec.source_url, prec.case_title, is_verified=prec.is_verified)
             suffix = f" ([Read judgment]({read_url}))" if read_url else ""
             lines.append(f"- **{prec.case_title}** {ref} ({prec.court}): {prec.legal_principle}{suffix}")
         lines.append("")
