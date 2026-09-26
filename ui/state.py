@@ -22,17 +22,17 @@ from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 EVALUATION_DIR = Path(__file__).resolve().parent.parent / "evaluation"
 
 _ACT_SHORT_NAMES = {
-    "Bharatiya Nyaya Sanhita, 2023": "BNS, 2023",
-    "Bharatiya Nagarik Suraksha Sanhita, 2023": "BNSS, 2023",
-    "Code of Criminal Procedure, 1973": "CrPC, 1973",
-    "Indian Penal Code, 1860": "IPC, 1860",
-    "Motor Vehicles Act, 1988": "MV Act, 1988",
-    "Transfer of Property Act, 1882": "TPA, 1882",
-    "Specific Relief Act, 1963": "SRA, 1963",
-    "Code of Civil Procedure, 1908": "CPC, 1908",
-    "Consumer Protection Act, 2019": "CPA, 2019",
-    "Real Estate (Regulation and Development) Act, 2016": "RERA, 2016",
-    "Prevention of Cruelty to Animals Act, 1960": "PCA Act, 1960",
+    "Bharatiya Nyaya Sanhita, 2023": "BNS",
+    "Bharatiya Nagarik Suraksha Sanhita, 2023": "BNSS",
+    "Code of Criminal Procedure, 1973": "CrPC",
+    "Indian Penal Code, 1860": "IPC",
+    "Motor Vehicles Act, 1988": "MV Act",
+    "Transfer of Property Act, 1882": "TPA",
+    "Specific Relief Act, 1963": "SRA",
+    "Code of Civil Procedure, 1908": "CPC",
+    "Consumer Protection Act, 2019": "CPA 2019",
+    "Real Estate (Regulation and Development) Act, 2016": "RERA",
+    "Prevention of Cruelty to Animals Act, 1960": "PCA Act",
 }
 
 _DOMAIN_CARD_SPEC = (
@@ -40,40 +40,39 @@ _DOMAIN_CARD_SPEC = (
         LegalDomain.MOTOR_VEHICLE_ACCIDENT,
         "🚗 Motor Vehicle Accidents",
         (
-            "Hit-and-run crashes, rash or drunken driving injuries & FIRs",
-            "MACT compensation claims for injury, disability or fatal accidents",
-            "Third-party & own-damage motor insurance claim refusals",
+            "Hit-and-run & rash/drunken driving FIRs",
+            "MACT injury, disability & fatal accident claims",
+            "Third-party & own-damage insurer claim refusals",
         ),
     ),
     (
         LegalDomain.PROPERTY_CONFLICT,
         "🏠 Property & Tenancy",
         (
-            "Unlawful eviction, landlord lockouts & summary recovery of possession",
-            "Tenant overstay after lease expiry, rent default & eviction notices",
-            "Neighbour encroachment, driveway/easement obstruction & civil injunctions",
+            "Unlawful eviction & landlord lockouts",
+            "Tenant overstay & lease termination notices",
+            "Neighbour encroachment & civil injunctions",
         ),
     ),
     (
         LegalDomain.CONSUMER_RIGHTS,
         "🛒 Consumer & Builder Delays",
         (
-            "Defective goods, electronics or vehicles & warranty/refund refusals",
-            "E-commerce, courier, banking & service deficiency complaints",
-            "RERA flat possession delays & builder refund with interest",
+            "Defective goods & warranty/refund refusals",
+            "E-commerce, courier & service deficiency claims",
+            "RERA flat delays & refund with interest",
         ),
     ),
     (
         LegalDomain.GENERAL_DISPUTE,
         "🐾 Animal Cruelty & Criminal",
         (
-            "Killing, poisoning or maiming pets & street animals (BNS s.325, PCA s.11)",
-            "Police FIR / Zero-FIR registration & Magistrate directions (BNSS s.173/175)",
-            "Cheating (BNS s.318), breach of trust (BNS s.316) & mob violence (BNS s.190/191)",
+            "Harming or killing pets & street animals (BNS s.325, PCA s.11)",
+            "Police FIR / Zero-FIR & Magistrate directions",
+            "Cheating, criminal breach of trust & mob violence",
         ),
     ),
 )
-
 
 
 class Engines(NamedTuple):
@@ -138,7 +137,7 @@ def compute_domain_coverage_cards(store: QdrantLegalStore) -> List[Dict[str, Any
         act_counts = Counter(d.act_name or "Unknown Act" for d in dom_statutes)
         sorted_acts = sorted(act_counts.items(), key=lambda kv: (-kv[1], kv[0]))
         acts_list = [f"{act} ({cnt})" for act, cnt in sorted_acts]
-        act_badges = [f"{_ACT_SHORT_NAMES.get(act, act)} ({cnt})" for act, cnt in sorted_acts]
+        act_badges = [_ACT_SHORT_NAMES.get(act, act) for act, _ in sorted_acts[:4]]
         cards.append(
             {
                 "domain": domain.value,
@@ -152,6 +151,7 @@ def compute_domain_coverage_cards(store: QdrantLegalStore) -> List[Dict[str, Any
             }
         )
     return cards
+
 
 
 

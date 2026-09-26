@@ -16,25 +16,29 @@ RESULT_KEY = "help_result"
 
 
 def render_coverage_cards(store) -> None:
-    """Display the four problem categories handled by our live legal database in a balanced 2x2 grid."""
+    """Display the four problem categories handled by our live legal database in a spacious 2x2 layout."""
     cards = compute_domain_coverage_cards(store)
     st.subheader("Problems we handle right now (from our live legal database)", anchor=False)
+    st.caption(
+        f"**What we cover:** Our database currently holds verified Indian statutes and Supreme Court judgments "
+        f"across the 4 categories below. {DISCLAIMER}"
+    )
+
     for idx in range(0, len(cards), 2):
+        if idx > 0:
+            st.write("")
         row_cards = cards[idx : idx + 2]
-        cols = st.columns(2, gap="medium")
+        cols = st.columns(2, gap="large")
         for col, card in zip(cols, row_cards):
             with col:
                 with st.container(border=True):
-                    st.markdown(f"##### {escape_markdown(card['title'])}")
-                    st.caption(
-                        f"📚 **{card['statute_count']}** statutory sections · "
-                        f"⚖️ **{card['precedent_count']}** SC judgment(s)"
-                    )
                     bullets = "\n".join(f"- {escape_markdown(item)}" for item in card["problems_list"])
-                    st.markdown(bullets)
-                    if card["act_badges"]:
-                        pills = " · ".join(f"`{b}`" for b in card["act_badges"])
-                        st.caption(f"**Indexed Acts:** {pills}")
+                    st.markdown(f"**{escape_markdown(card['title'])}**\n\n{bullets}")
+                    pills = " · ".join(f"`{b}`" for b in card["act_badges"])
+                    st.caption(
+                        f"📚 **{card['statute_count']}** sections · "
+                        f"⚖️ **{card['precedent_count']}** SC judgments  |  {pills}"
+                    )
 
 
 def render() -> None:
@@ -45,12 +49,8 @@ def render() -> None:
         "Describe your situation in plain language. We'll tell you **what to do, in what order, where to go, "
         "and by when**, citing only Indian laws and judgments from our database that apply to your facts."
     )
-    render_coverage_cards(engines.store)
-    with st.expander("📋 View full list of indexed Acts & out-of-coverage policy", expanded=False):
-        st.caption(f"**What we cover:** {escape_markdown(engines.proposed.coverage_summary())} {DISCLAIMER}")
 
     scenario = scenario_input(key_prefix="help", submit_label="Get my action plan")
-
 
     if scenario:
         try:
@@ -68,3 +68,7 @@ def render() -> None:
         st.divider()
         render_scenario_echo(saved["scenario"])
         render_full_result(saved["scenario"], saved["response"], key_prefix="help")
+
+    st.divider()
+    render_coverage_cards(engines.store)
+
