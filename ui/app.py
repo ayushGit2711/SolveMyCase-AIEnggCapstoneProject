@@ -30,6 +30,7 @@ from solvemycase.ui.views import benchmark, compare, get_help, how_it_works
 
 APP_TITLE = "SOLVE MY CASE"
 APP_TAGLINE = "Step-by-step action plans for everyday legal problems in India."
+APP_FOOTER = 'Made by ❤️ by "THE R.A.M.S"'
 
 st.set_page_config(
     page_title=APP_TITLE,
@@ -58,6 +59,13 @@ def render_sidebar() -> None:
         st.caption(f"Corpus: {stats['statute_count']} statutory sections · {stats['precedent_count']} judgments")
         st.divider()
         st.caption(DISCLAIMER)
+        st.caption(APP_FOOTER)
+
+
+def render_footer() -> None:
+    """Show the team credit footer at the bottom of every page."""
+    st.divider()
+    st.caption(APP_FOOTER)
 
 
 navigation = st.navigation(
@@ -71,3 +79,4 @@ navigation = st.navigation(
 render_brand_header()
 render_sidebar()
 navigation.run()
+render_footer()

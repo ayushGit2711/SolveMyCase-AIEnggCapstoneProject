@@ -302,3 +302,8 @@ The suite (**125 tests**) covers config, normalizer & link integrity (56-item co
 Please read [`AGENTS.md`](AGENTS.md) (coding guidelines: zero assumptions, reuse, config over hardcoding, PEP 8, testability, no secrets in code) before opening a PR.
 
 > **Disclaimer:** SOLVE MY CASE (`solvemycase`) gives procedural information, not legal advice. Consult a qualified advocate for your specific situation.
+
+---
+
+Made by ❤️ (`<3`) by **"THE R.A.M.S"**
+

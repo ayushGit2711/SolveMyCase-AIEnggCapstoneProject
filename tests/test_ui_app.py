@@ -99,6 +99,7 @@ def test_entrypoint_renders_default_get_help_page():
     assert at.title[0].value == "⚖️ SOLVE MY CASE"
     assert at.header[0].value == "Get a step-by-step legal action plan"
     assert any(c.value.startswith("**What we cover:** Our database currently holds") for c in at.caption)
+    assert any('Made by ❤️ by "THE R.A.M.S"' in c.value for c in at.caption)
     assert any("Offline mode" in w.value for w in at.sidebar.warning)
 
 
