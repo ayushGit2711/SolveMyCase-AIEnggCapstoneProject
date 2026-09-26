@@ -294,3 +294,38 @@ def test_export_includes_coverage_note():
     assert md.index("## About our coverage") < md.index("## Action plan")
     assert "Our database holds A." in md
     assert "## Verified laws" not in md and "## Verified court judgments" not in md
+
+
+def test_get_help_renders_live_domain_coverage_cards():
+    at = _run_view("get_help")
+    assert not at.exception
+    text = _all_text(at)
+    assert "Problems we handle right now (from our live legal database)" in text
+    assert "🚗 Motor Vehicle Accidents" in text
+    assert "🏠 Property & Tenancy" in text
+    assert "🛒 Consumer & Builder Delays" in text
+    assert "🐾 Animal Cruelty & Criminal" in text
+
+
+def test_lawyers_page_filters_and_submits_demo_booking():
+    at = _run_view("lawyers")
+    assert not at.exception
+    assert at.header[0].value == "Connect to a lawyer"
+
+    cat_select = at.selectbox(key="lawyer_filter_category")
+    cat_select.set_value("🐾 Animal Cruelty & Criminal Offences").run()
+    assert not at.exception
+    assert "Adv. Kavita Menon" in _all_text(at)
+
+    # Fill and submit the demo consultation request form for Adv. Kavita Menon (adv_crim_01)
+    at.text_input(key="dir_adv_crim_01_name").input("Rohan Sharma").run()
+    at.text_input(key="dir_adv_crim_01_contact").input("+91 98765 43210").run()
+    at.text_area(key="dir_adv_crim_01_summary").input("Watchman harmed our dog in the society compound.").run()
+    submit_buttons = [b for b in at.button if "Request consultation (Demo)" in b.label]
+    assert len(submit_buttons) == 3
+    submit_buttons[1].click().run()
+    assert not at.exception
+    assert any("Consultation request recorded" in s.value for s in at.success)
+
+
+

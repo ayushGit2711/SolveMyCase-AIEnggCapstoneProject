@@ -8,11 +8,29 @@ from solvemycase.ui.components.formatting import DISCLAIMER, escape_markdown
 from solvemycase.ui.components.progress import run_with_progress
 from solvemycase.ui.components.result import render_full_result, render_scenario_echo
 from solvemycase.ui.components.scenario_input import scenario_input
-from solvemycase.ui.state import get_engines
+from solvemycase.ui.state import compute_domain_coverage_cards, get_engines
 
 logger = logging.getLogger(__name__)
 
 RESULT_KEY = "help_result"
+
+
+def render_coverage_cards(store) -> None:
+    """Display the four problem categories handled by our live legal database."""
+    cards = compute_domain_coverage_cards(store)
+    st.markdown("#### Problems we handle right now (from our live legal database)")
+    cols = st.columns(len(cards))
+    for col, card in zip(cols, cards):
+        with col:
+            with st.container(border=True):
+                st.markdown(f"**{escape_markdown(card['title'])}**")
+                st.caption(
+                    f"📚 **{card['statute_count']}** statutory sections · "
+                    f"**{card['precedent_count']}** SC judgment(s)"
+                )
+                st.markdown(escape_markdown(card["problems"]))
+                if card["acts_summary"]:
+                    st.caption(f"*Indexed Acts:* {escape_markdown(card['acts_summary'])}")
 
 
 def render() -> None:
@@ -23,6 +41,7 @@ def render() -> None:
         "Describe your situation in plain language. We'll tell you **what to do, in what order, where to go, "
         "and by when**, citing only Indian laws and judgments from our database that apply to your facts."
     )
+    render_coverage_cards(engines.store)
     st.caption(f"**What we cover:** {escape_markdown(engines.proposed.coverage_summary())} {DISCLAIMER}")
 
     scenario = scenario_input(key_prefix="help", submit_label="Get my action plan")

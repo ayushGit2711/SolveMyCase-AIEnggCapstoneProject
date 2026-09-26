@@ -32,6 +32,10 @@ EXAMPLE_SCENARIOS: Dict[str, str] = {
         "The builder promised possession of my flat in 2022 but it is still incomplete. I have paid "
         "90% of the price. Can I get a refund with interest?"
     ),
+    "🐾 Pet harmed by watchman": (
+        "Our society watchman beat and killed my pet cat with a stick last night. We have CCTV footage. "
+        "What criminal complaint can we file?"
+    ),
 }
 
 PLACEHOLDER = (

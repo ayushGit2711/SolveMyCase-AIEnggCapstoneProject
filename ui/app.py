@@ -26,7 +26,7 @@ import streamlit as st
 
 from solvemycase.ui.components.formatting import DISCLAIMER
 from solvemycase.ui.state import compute_corpus_stats, get_engines, is_llm_mode
-from solvemycase.ui.views import benchmark, compare, get_help, how_it_works
+from solvemycase.ui.views import benchmark, compare, get_help, how_it_works, lawyers
 
 APP_TITLE = "SOLVE MY CASE"
 APP_TAGLINE = "Step-by-step action plans for everyday legal problems in India."
@@ -71,6 +71,7 @@ def render_footer() -> None:
 navigation = st.navigation(
     [
         st.Page(get_help.render, title="Get help", icon="🧭", url_path="get-help", default=True),
+        st.Page(lawyers.render, title="Connect to a lawyer", icon="👩‍⚖️", url_path="lawyers"),
         st.Page(compare.render, title="Compare A vs B", icon="⚖️", url_path="compare"),
         st.Page(benchmark.render, title="Benchmark", icon="📊", url_path="benchmark"),
         st.Page(how_it_works.render, title="How it works", icon="ℹ️", url_path="how-it-works"),

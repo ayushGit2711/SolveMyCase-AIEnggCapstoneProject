@@ -16,6 +16,7 @@ from solvemycase.ui.components.formatting import (
     removed_references,
     verified_citation_count,
 )
+from solvemycase.ui.components.lawyers import render_inline_lawyer_connect
 
 
 def render_scenario_echo(scenario: str) -> None:
@@ -60,7 +61,7 @@ def render_verification_details(response: DualOutputResponse) -> None:
 
 
 def render_full_result(scenario: str, response: DualOutputResponse, key_prefix: str) -> None:
-    """Citizen-facing result: summary strip, tabbed details, and a Markdown download."""
+    """Citizen-facing result: summary strip, tabbed details, lawyer connect, and a Markdown download."""
     if is_guardrail_rejection(response):
         render_rejection(response)
         return
@@ -93,6 +94,8 @@ def render_full_result(scenario: str, response: DualOutputResponse, key_prefix: 
         render_deadlines(response.action_plan)
     with tab_checks:
         render_verification_details(response)
+
+    render_inline_lawyer_connect(scenario, response, key_prefix=key_prefix)
 
     st.download_button(
         "⬇️ Download plan (Markdown)",

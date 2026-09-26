@@ -206,3 +206,48 @@ def test_phase_b_statute_and_precedent_links():
     assert statute_search_url("Motor Vehicles Act, 1988", "150") == "https://indiankanoon.org/doc/185690380/"
     assert precedent_read_url(None, "Animal Welfare Board of India v. A. Nagaraja & Ors.") == "https://indiankanoon.org/doc/39696860/"
     assert precedent_read_url(None, "M. Nagarajan v. State") != "https://indiankanoon.org/doc/39696860/"
+
+
+def test_infer_complaint_category_and_filter_lawyers():
+    from solvemycase.ui.components.lawyers import (
+        COMPLAINT_ANIMAL_CRIMINAL,
+        COMPLAINT_CATEGORIES,
+        COMPLAINT_CONSUMER,
+        COMPLAINT_MVA,
+        COMPLAINT_OTHER,
+        COMPLAINT_PROPERTY,
+        filter_lawyers,
+        infer_complaint_category,
+    )
+
+    assert infer_complaint_category(domain=LegalDomain.MOTOR_VEHICLE_ACCIDENT) == COMPLAINT_MVA
+    assert infer_complaint_category(domain=LegalDomain.PROPERTY_CONFLICT) == COMPLAINT_PROPERTY
+    assert infer_complaint_category(domain=LegalDomain.CONSUMER_RIGHTS) == COMPLAINT_CONSUMER
+    assert (
+        infer_complaint_category(
+            scenario="A watchman killed my pet dog with a stick.",
+            domain=LegalDomain.GENERAL_DISPUTE,
+        )
+        == COMPLAINT_ANIMAL_CRIMINAL
+    )
+    assert (
+        infer_complaint_category(
+            scenario="My employer has not paid my salary for three months.",
+            domain=LegalDomain.GENERAL_DISPUTE,
+            coverage_gap=True,
+        )
+        == COMPLAINT_OTHER
+    )
+
+    all_lawyers = filter_lawyers()
+    assert len(all_lawyers) >= 8
+    for cat in COMPLAINT_CATEGORIES:
+        matched = filter_lawyers(category=cat)
+        assert len(matched) >= 1
+    pune_mact = filter_lawyers(
+        category=COMPLAINT_MVA,
+        city="Pune",
+    )
+    assert any("Deshmukh" in l["name"] for l in pune_mact)
+
+

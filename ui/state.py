@@ -15,11 +15,34 @@ import streamlit as st
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.proposed.graph import LegalAgentGraph
-from solvemycase.data.ingestion.schema import DocumentType
+from solvemycase.data.ingestion.schema import DocumentType, LegalDomain
 from solvemycase.data.vectorstore.indexer import EmbeddingProvider, ensure_index_current
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 
 EVALUATION_DIR = Path(__file__).resolve().parent.parent / "evaluation"
+
+_DOMAIN_CARD_SPEC = (
+    (
+        LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+        "🚗 Motor Vehicle Accidents",
+        "Hit-and-run crashes, rash/negligent driving injuries, MACT compensation claims & insurer claim refusals.",
+    ),
+    (
+        LegalDomain.PROPERTY_CONFLICT,
+        "🏠 Property & Tenancy",
+        "Unlawful eviction/lockout, tenant overstay after lease expiry, plot/driveway encroachment & injunctions.",
+    ),
+    (
+        LegalDomain.CONSUMER_RIGHTS,
+        "🛒 Consumer & Builder Delays",
+        "Defective goods/electronics, e-commerce refund refusals, courier/service deficiency & RERA flat delays.",
+    ),
+    (
+        LegalDomain.GENERAL_DISPUTE,
+        "🐾 Animal Cruelty & Criminal",
+        "Killing, poisoning or maiming pets/street animals (BNS s.325, PCA s.11), cheating, breach of trust & FIRs.",
+    ),
+)
 
 
 class Engines(NamedTuple):
@@ -71,6 +94,29 @@ def compute_corpus_stats(store: QdrantLegalStore) -> Dict[str, Any]:
         "sections_per_act": dict(sorted(sections_per_act.items(), key=lambda kv: (-kv[1], kv[0]))),
         "precedent_titles": sorted(d.title for d in precedents),
     }
+
+
+def compute_domain_coverage_cards(store: QdrantLegalStore) -> List[Dict[str, Any]]:
+    """Build per-domain problem & law coverage summaries from the live Qdrant store."""
+    cards: List[Dict[str, Any]] = []
+    docs = list(store.corpus_documents)
+    for domain, title, problems in _DOMAIN_CARD_SPEC:
+        dom_docs = [d for d in docs if d.domain == domain]
+        dom_statutes = [d for d in dom_docs if d.doc_type == DocumentType.STATUTE]
+        dom_precedents = [d for d in dom_docs if d.doc_type == DocumentType.PRECEDENT]
+        act_counts = Counter(d.act_name or "Unknown Act" for d in dom_statutes)
+        acts_list = [f"{act} ({cnt})" for act, cnt in sorted(act_counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+        cards.append(
+            {
+                "domain": domain.value,
+                "title": title,
+                "problems": problems,
+                "statute_count": len(dom_statutes),
+                "precedent_count": len(dom_precedents),
+                "acts_summary": ", ".join(acts_list),
+            }
+        )
+    return cards
 
 
 def _load_json(path: Path) -> Optional[Any]:

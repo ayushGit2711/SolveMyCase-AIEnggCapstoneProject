@@ -120,10 +120,10 @@ solvemycase/                      ← repo root (package)
 │   └── sme_review.py             Legal expert (SME) annotation store & Judge-vs-Human agreement (MAE/Pearson r/κ)
 ├── ui/
 │   ├── app.py                    Streamlit entrypoint ("SOLVE MY CASE" header + navigation + sidebar)
-│   ├── state.py                  Cached engines, live corpus stats, benchmark loaders
-│   ├── views/                    Pages: Get help, Compare A vs B, Benchmark (Summary, Explorer, SME tab), How it works
-│   └── components/               Reusable widgets: input, progress, action plan, citations, export, formatting
-├── tests/                        pytest suite (125 tests)
+│   ├── state.py                  Cached engines, live corpus stats & per-domain coverage cards, benchmark loaders
+│   ├── views/                    Pages: Get help, Connect to a lawyer, Compare A vs B, Benchmark, How it works
+│   └── components/               Reusable widgets: input, progress, action plan, citations, lawyers, export, formatting
+├── tests/                        pytest suite (128 tests)
 └── AGENTS.md / GEMINI.md         Coding guidelines for AI agents & contributors
 ```
 
@@ -274,7 +274,7 @@ python -m solvemycase.evaluation.comparative_runner --judge-samples 3     # mult
 python -m pytest solvemycase/tests -q
 ```
 
-The suite (**125 tests**) covers config, normalizer & link integrity (56-item corpus), Qdrant hybrid & criminal-code store (including embedder-space compatibility and auto-reindex), `ApplicabilityJudge` and coverage-gap synthesis, both pipelines (including `run_with_trace` and streaming), Act-aware citation parsing & irrelevant-citation metrics, decomposed LLM judge, the FastAPI service, and every Streamlit UI page (`AppTest`, including the `"SOLVE MY CASE"` header and coverage-gap banner).
+The suite (**128 tests**) covers config, normalizer & link integrity (56-item corpus), Qdrant hybrid & criminal-code store (including embedder-space compatibility and auto-reindex), `ApplicabilityJudge` and coverage-gap synthesis, both pipelines (including `run_with_trace` and streaming), Act-aware citation parsing & irrelevant-citation metrics, decomposed LLM judge, the FastAPI service, and every Streamlit UI page (`AppTest`, including the `"SOLVE MY CASE"` header, live per-domain coverage cards, `"Connect to a lawyer"` directory, and coverage-gap banner).
 
 ---
 
@@ -285,7 +285,7 @@ The suite (**125 tests**) covers config, normalizer & link integrity (56-item co
 | 1–4 | Scaffold, config, 56-item corpus ingestion (47 statutes + 9 SC judgments), hybrid Qdrant store, guardrail, decontextualizer, multi-query cross-encoder reranker, `ApplicabilityJudge` & coverage-gap router, planner, strict verification, LangGraph | ✅ Done |
 | — | BNS/BNSS/IPC/PCA criminal-code RAG sub-layer + repealed-law warnings + runtime JSONL telemetry | ✅ Done |
 | 5 | 61-scenario OpenAI benchmark (46 covered + 8 uncovered + 7 guardrail), irrelevant-citation & coverage-honesty metrics, decomposed 5-dimension LLM judge, SME calibration & noise-sensitivity harness | ✅ Done |
-| 6 | FastAPI service + `"SOLVE MY CASE"` Streamlit side-by-side UI (with coverage-gap banners & 3-tab Benchmark/SME dashboard) | ✅ Done |
+| 6 | FastAPI service + `"SOLVE MY CASE"` Streamlit UI (live per-domain coverage cards, `"Connect to a lawyer"` directory & inline matching, coverage-gap banners & 3-tab Benchmark/SME dashboard) | ✅ Done |
 
 ### Known limitations / next steps
 
