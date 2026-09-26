@@ -23,6 +23,12 @@ def render_scenario_echo(scenario: str) -> None:
     st.caption(f"**Answering:** {escape_markdown(scenario)}")
 
 
+def render_coverage_note(response: DualOutputResponse) -> None:
+    """Say plainly when our database has no law for these facts (shared by Get Help and Compare)."""
+    if response.coverage_note:
+        st.info(f"**About our coverage:** {escape_markdown(response.coverage_note)}", icon="ℹ️")
+
+
 def render_rejection(response: DualOutputResponse) -> None:
     """Friendly message when the guardrail decides the query is out of scope."""
     details = rejection_details(response)
@@ -37,9 +43,11 @@ def render_verification_details(response: DualOutputResponse) -> None:
     removed = removed_references(response)
     verified_count = verified_citation_count(response)
     st.markdown(
-        f"Every law and judgment in this answer was checked against official legal text we retrieved. "
-        f"**{verified_count}** passed the check."
+        "Every law and judgment shown was matched to official text in our database and screened for relevance "
+        f"to your facts. Laws outside our database aren't covered. **{verified_count}** passed the check."
     )
+    if verified_count == 0 and response.coverage_note:
+        st.markdown("No law or judgment in our database was found to apply to these facts, so none is cited.")
     if removed:
         st.markdown(
             f"We removed **{len(removed)}** reference(s) that couldn't be matched to official text, "
@@ -60,6 +68,7 @@ def render_full_result(scenario: str, response: DualOutputResponse, key_prefix: 
     verified_count = verified_citation_count(response)
     deadlines = extract_deadlines(response.action_plan)
 
+    render_coverage_note(response)
     with st.container(border=True):
         c1, c2, c3 = st.columns(3)
         c1.metric("Type of case", domain_label(response.domain))
@@ -74,7 +83,12 @@ def render_full_result(scenario: str, response: DualOutputResponse, key_prefix: 
     with tab_plan:
         render_action_plan(response.action_plan)
     with tab_laws:
-        render_citations(response.statutory_citations, response.precedent_citations, key_prefix=f"{key_prefix}_cit")
+        render_citations(
+            response.statutory_citations,
+            response.precedent_citations,
+            key_prefix=f"{key_prefix}_cit",
+            coverage_gap=bool(response.coverage_note),
+        )
     with tab_deadlines:
         render_deadlines(response.action_plan)
     with tab_checks:

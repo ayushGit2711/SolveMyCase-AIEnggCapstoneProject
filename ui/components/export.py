@@ -32,7 +32,7 @@ def response_to_markdown(scenario: str, response: DualOutputResponse, generated_
     """
     generated_on = generated_on or date.today()
     lines: List[str] = [
-        "# solvemycase — Legal Action Plan",
+        "# SOLVE MY CASE — Legal Action Plan",
         "",
         f"*Generated on {generated_on.isoformat()} · Category: {domain_label(response.domain)}*",
         "",
@@ -40,9 +40,10 @@ def response_to_markdown(scenario: str, response: DualOutputResponse, generated_
         "",
         scenario.strip(),
         "",
-        "## Action plan",
-        "",
     ]
+    if response.coverage_note:
+        lines += ["## About our coverage", "", response.coverage_note.strip(), ""]
+    lines += ["## Action plan", ""]
 
     for phase, steps in group_steps_by_phase(response.action_plan).items():
         lines += [f"### {PHASE_LABELS[phase]}", ""]

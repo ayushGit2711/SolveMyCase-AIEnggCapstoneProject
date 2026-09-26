@@ -70,6 +70,21 @@ class Settings(BaseSettings):
         description="Embedding model for generating semantic vector representations.",
     )
 
+    openai_timeout_seconds: float = Field(
+        default=45.0,
+        ge=1.0,
+        le=600.0,
+        validation_alias="OPENAI_TIMEOUT_SECONDS",
+        description="Per-request timeout for OpenAI calls (the SDK default is 600 s).",
+    )
+    openai_max_retries: int = Field(
+        default=2,
+        ge=0,
+        le=5,
+        validation_alias="OPENAI_MAX_RETRIES",
+        description="Automatic retries for failed OpenAI requests.",
+    )
+
     @property
     def openai_model_mini(self) -> str:
         """Alias for openai_model_fast ('gpt-4o-mini')."""
@@ -140,7 +155,36 @@ class Settings(BaseSettings):
     retrieval_min_confidence: float = Field(
         default=0.25,
         validation_alias="RETRIEVAL_MIN_CONFIDENCE",
-        description="Minimum calibrated top-1 reranker confidence before triggering unfiltered fallback search.",
+        description=(
+            "Minimum top-1 reranker score (max over the scenario and its sub-queries) before an extra unfiltered "
+            "search widens the candidate pool. This is a recall aid only: whether any law applies is decided by "
+            "the applicability check. Cross-encoder scores are sigmoid probabilities; the offline lexical scorer "
+            "uses a lower scale, so the widening fires more often offline."
+        ),
+    )
+    applicability_check_enabled: bool = Field(
+        default=True,
+        validation_alias="APPLICABILITY_CHECK_ENABLED",
+        description=(
+            "Run one fast-LLM applicability check per query that keeps only provisions and judgments that apply "
+            "to the facts, and answers with a coverage gap when none do. Without an LLM (offline) or when the check "
+            "fails, general_dispute questions get a coverage-gap answer and other domains keep their top reranked, "
+            "domain-filtered sources. Set to false to turn the check off entirely."
+        ),
+    )
+    applicability_candidate_k: int = Field(
+        default=10,
+        ge=1,
+        le=30,
+        validation_alias="APPLICABILITY_CANDIDATE_K",
+        description="Number of top reranked candidates sent to the applicability check.",
+    )
+    applicability_timeout_seconds: float = Field(
+        default=15.0,
+        ge=1.0,
+        le=120.0,
+        validation_alias="APPLICABILITY_TIMEOUT_SECONDS",
+        description="Timeout for the applicability-check LLM call (retried at most once).",
     )
     eval_judge_samples: int = Field(
         default=1,

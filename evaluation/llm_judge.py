@@ -15,18 +15,26 @@ Features:
 
 from concurrent.futures import ThreadPoolExecutor
 import json
+import logging
 import statistics
 from typing import Any, Dict, List, Optional, Tuple
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
+from solvemycase.config.openai_client import build_openai_client
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.data.ingestion.schema import DualOutputResponse, RetrievedContext
 from solvemycase.evaluation.metrics import (
+    acceptable_act_refs,
     compute_citation_grounding_metrics,
     compute_ground_truth_alignment,
+    compute_irrelevant_citation_rate,
     is_guardrail_rejection,
+    is_uncovered_scenario,
+    _statutory_basis_cites,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class JudgeScore(BaseModel):
@@ -85,7 +93,7 @@ class LegalLLMJudge:
     def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or get_settings()
         self.api_key = self.settings.openai_api_key.get_secret_value() if self.settings.openai_api_key else None
-        self.client = OpenAI(api_key=self.api_key) if self.api_key else None
+        self.client = build_openai_client(self.settings)
 
     def judge_response(
         self,
@@ -117,6 +125,55 @@ class LegalLLMJudge:
                     "Out-of-scope query was accurately intercepted and rejected by the guardrail."
                     if is_rejected
                     else "Pipeline failed to reject an out-of-scope non-legal query (0.0 across all dimensions)."
+                ),
+            )
+
+        # 1b. Uncovered legal scenario (Phase C): deterministic evaluation based on irrelevant citation rate
+        if is_uncovered_scenario(expected_meta):
+            if is_guardrail_rejection(response) or not response.action_plan:
+                return JudgeScore(
+                    statutory_accuracy=0.0,
+                    procedural_actionability=0.0,
+                    forum_appropriateness=0.0,
+                    hallucination_freedom=0.0,
+                    coherence_and_specificity=0.0,
+                    overall_score=0.0,
+                    score_variance=0.0,
+                    flagged_for_human_review=True,
+                    rubric_checks={"uncovered_honest_response": False},
+                    reasoning="Uncovered legal query was wrongly rejected or had an empty action plan.",
+                )
+            corpus_docs = getattr(store, "corpus_documents", None) if store is not None else None
+            irr_rate = compute_irrelevant_citation_rate(response, expected_meta, corpus_docs)
+            acceptable_refs = acceptable_act_refs(expected_meta)
+            unsupported_bases = [
+                step.statutory_basis
+                for step in response.action_plan
+                if step.statutory_basis
+                and not any(_statutory_basis_cites(step.statutory_basis, ref) for ref in acceptable_refs)
+            ]
+            total_cits = len(response.statutory_citations) + len(response.precedent_citations)
+            if total_cits == 0 and unsupported_bases:
+                irr_rate = 1.0
+            score = round(5.0 * (1.0 - irr_rate), 2)
+            honest = bool(irr_rate == 0.0 and not unsupported_bases)
+            return JudgeScore(
+                statutory_accuracy=score,
+                procedural_actionability=score,
+                forum_appropriateness=score,
+                hallucination_freedom=score,
+                coherence_and_specificity=score,
+                overall_score=score,
+                score_variance=0.0,
+                flagged_for_human_review=not honest,
+                rubric_checks={
+                    "uncovered_honest_response": honest,
+                    "has_coverage_note": bool(response.coverage_note),
+                    "zero_irrelevant_citations": irr_rate == 0.0,
+                },
+                reasoning=(
+                    f"Uncovered legal scenario: irrelevant_citation_rate={irr_rate:.0%}, "
+                    f"coverage_note={bool(response.coverage_note)}."
                 ),
             )
 
@@ -171,7 +228,7 @@ class LegalLLMJudge:
                 reasoning=sample_scores[0].reasoning,
             )
         except Exception as err:
-            print(f"[LLMJudge] OpenAI decomposed judge failed ({err}). Returning deterministic rubric evaluation.")
+            logger.warning("OpenAI decomposed judge failed (%s); returning deterministic rubric evaluation.", err)
             return prog_score
 
     def _score_single_criterion(

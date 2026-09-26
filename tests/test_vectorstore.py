@@ -122,3 +122,29 @@ def test_reopened_store_rehydrates_corpus_from_disk(tmp_path):
     regrounded = reopened_store.exact_section_search("166", "Motor Vehicles Act, 1988")
     assert len(regrounded) == 1
     assert regrounded[0].act_name == "Motor Vehicles Act, 1988"
+
+
+def test_reopened_store_keeps_fingerprint_and_embedder_id(tmp_path):
+    """A restarted app must see the same corpus fingerprint and embedder id the indexer wrote.
+
+    Otherwise ensure_index_current would re-index on every start (or never notice a stale corpus).
+    """
+    from solvemycase.data.vectorstore.indexer import run_indexing_pipeline
+
+    settings = Settings(_env_file=None, QDRANT_PATH=str(tmp_path / "qdrant"), OPENAI_API_KEY=None)
+    provider = EmbeddingProvider(settings=settings, dim=1536)
+    provisions = load_legal_provisions_from_parquet(Path("/nonexistent"))
+    precedents = load_legal_precedents()
+    corpus = {"provisions": provisions, "precedents": precedents}
+
+    indexing_store = QdrantLegalStore(settings=settings, vector_dim=1536)
+    run_indexing_pipeline(store=indexing_store, settings=settings, embedder=provider, corpus_data=corpus)
+    fingerprint = indexing_store.loaded_fingerprint
+    indexing_store.client.close()
+
+    reopened_store = QdrantLegalStore(settings=settings, vector_dim=1536)
+
+    assert reopened_store.loaded_fingerprint == fingerprint
+    assert reopened_store.loaded_embedder_ids == {provider.embedder_id}
+    assert reopened_store.needs_reindex(provisions, precedents, provider.embedder_id) is False
+    assert reopened_store.needs_reindex(provisions[:-1], precedents, provider.embedder_id) is True

@@ -128,6 +128,27 @@ class DualOutputResponse(BaseModel):
         default_factory=list,
         description="Any proposed citations discarded due to lack of strict corpus grounding."
     )
+    coverage_note: Optional[str] = Field(
+        default=None,
+        description=(
+            "Plain-language note shown when the corpus holds no law that applies to the facts "
+            "(coverage gap) or when no citation survived verification."
+        ),
+    )
+
+
+class ApplicabilityMode(str, Enum):
+    """How the applicability check ran for a query."""
+    LLM = "llm"
+    OFFLINE = "offline"
+    DISABLED = "disabled"
+    ERROR = "error"
+
+
+class CoverageGapReason(str, Enum):
+    """Why the pipeline answered with a coverage gap instead of citing law."""
+    NO_APPLICABLE_LAW = "no_applicable_law"
+    SCREENING_UNAVAILABLE = "screening_unavailable"
 
 
 class ExecutionTrace(BaseModel):
@@ -142,59 +163,146 @@ class ExecutionTrace(BaseModel):
     retrieval_gate_triggered: bool = Field(
         default=False, description="Whether RetrievalQualityGate fired unfiltered fallback retrieval."
     )
+    candidate_contexts: List[RetrievedContext] = Field(
+        default_factory=list,
+        description=(
+            "Reranked candidates before the applicability check (proposed pipeline only). Use these for "
+            "retrieval metrics so the retriever stays comparable with the baseline."
+        ),
+    )
     retrieved_contexts: List[RetrievedContext] = Field(
-        default_factory=list, description="Final retrieved and reranked context chunks passed to the planner."
+        default_factory=list,
+        description=(
+            "Context chunks passed to the planner: after the applicability check in the proposed pipeline "
+            "(empty on a coverage gap), the hybrid-search results in the baseline."
+        ),
+    )
+    coverage_gap: bool = Field(
+        default=False, description="True when no retrieved provision applied to the facts (coverage-gap answer)."
+    )
+    coverage_gap_reason: Optional[str] = Field(
+        default=None,
+        description="Why a coverage gap was returned: 'no_applicable_law' or 'screening_unavailable'.",
+    )
+    applicability_mode: Optional[str] = Field(
+        default=None, description="How applicability was judged: 'llm', 'offline', 'disabled' or 'error'."
+    )
+    applicability_rejected: List[str] = Field(
+        default_factory=list, description="Titles of retrieved candidates rejected as not applicable to the facts."
     )
 
 
 REJECTION_SUMMARY_PREFIX = "Query rejected: "
 CLARIFICATION_PREFIX = "Clarification: "
+
+
+def is_guardrail_rejection(response: DualOutputResponse) -> bool:
+    """Return True if the response represents an out-of-scope guardrail rejection."""
+    if response.action_plan:
+        return False
+    summary = (response.scenario_summary or "").strip()
+    if summary.startswith(REJECTION_SUMMARY_PREFIX.strip()):
+        return True
+    return any(str(s).startswith(CLARIFICATION_PREFIX.strip()) for s in (response.unverified_citations_stripped or []))
+
+
+def stripped_unverified_citations(response: DualOutputResponse) -> List[str]:
+    """Return unverified citations stripped during verification, excluding guardrail clarification prompts."""
+    return [
+        s for s in (response.unverified_citations_stripped or []) if not str(s).startswith(CLARIFICATION_PREFIX.strip())
+    ]
+
+
+def compile_keyword_pattern(fragments: List[str]) -> "re.Pattern[str]":
+    """Compile regex fragments into one case-insensitive, whole-word alternation.
+
+    Shared by the criminal router, the guardrail heuristic and the graph's query hints so keyword matching
+    behaves the same everywhere. Whole words matter: a bare substring test made "first" match "fir",
+    "scared" match "car" and "dead" match "deadline".
+    """
+    return re.compile(r"\b(?:" + "|".join(fragments) + r")\b", re.IGNORECASE)
+
+
+# Word-boundary patterns (stems may take suffixes) that indicate a possible criminal offence or police step.
 CRIMINAL_ROUTE_KEYWORDS = (
-    "fir",
-    "police",
-    "arrest",
-    "bail",
-    "accident",
-    "death",
-    "negligen",
-    "hit and run",
-    "cheat",
-    "fraud",
-    "abus",
-    "insult",
-    "threat",
-    "intimidat",
-    "harass",
-    "theft",
-    "stole",
-    "stolen",
-    "misappropriat",
-    "assault",
+    r"firs?",
+    r"police",
+    r"arrest\w*",
+    r"bail",
+    r"accident\w*",
+    r"deaths?",
+    r"died",
+    r"dead",
+    r"dies",
+    r"negligen\w*",
+    r"hit[\s-]+and[\s-]+run",
+    r"cheat\w*",
+    r"fraud\w*",
+    r"abus\w*",
+    r"insult\w*",
+    r"threat\w*",
+    r"intimidat\w*",
+    r"harass\w*",
+    r"theft",
+    r"stole",
+    r"stolen",
+    r"misappropriat\w*",
+    r"assault\w*",
+    r"kill\w*",
+    r"poison\w*",
+    r"beat",
+    r"beats",
+    r"beaten",
+    r"beating",
+    r"attack\w*",
+    r"cruel\w*",
+    r"dowry",
+    r"hack\w*",
+    r"murder\w*",
+    r"extort\w*",
+    r"stalk\w*",
+    r"molest\w*",
+    r"forg(?:e|ed|ery|eries|ing)",
+    r"brib(?:e|es|ed|ery|ing)",
 )
+_CRIMINAL_ROUTE_PATTERN = compile_keyword_pattern(list(CRIMINAL_ROUTE_KEYWORDS))
 
 
 def should_trigger_criminal_route(domain: Any, scenario: str) -> bool:
-    """Return True if the domain or scenario text contains criminal-code indicators."""
+    """Return True if the criminal-code sub-layer should run for this scenario.
+
+    Motor accidents always run it (rash driving / death by negligence are offences). Other domains run it
+    only when the text has a criminal indicator as a whole word; general_dispute no longer triggers it on
+    its own, so a civil question (e.g. divorce) does not pull in penal provisions.
+    """
     domain_str = domain.value if isinstance(domain, LegalDomain) else str(domain or "")
-    scenario_lower = (scenario or "").lower()
-    return domain_str in (LegalDomain.MOTOR_VEHICLE_ACCIDENT.value, LegalDomain.GENERAL_DISPUTE.value) or any(
-        kw in scenario_lower for kw in CRIMINAL_ROUTE_KEYWORDS
-    )
+    if domain_str == LegalDomain.MOTOR_VEHICLE_ACCIDENT.value:
+        return True
+    return bool(_CRIMINAL_ROUTE_PATTERN.search(scenario or ""))
 
 
-_ACT_STOPWORDS = frozenset({"the", "act", "of", "in", "and", "india", "indian", "code", "law", "laws", "section", "sec"})
+# Tokens too generic to tell two Acts apart. "bharatiya"/"sanhita" are shared by BNS and BNSS, and
+# "procedure" by CPC and CrPC, so keeping them made different codes look like the same Act.
+_ACT_STOPWORDS = frozenset({
+    "the", "act", "acts", "of", "in", "and", "for", "from", "with", "under", "india", "indian", "code",
+    "law", "laws", "section", "sec", "bharatiya", "sanhita", "adhiniyam", "procedure", "protection",
+    "prevention", "amendment", "amended",
+})
 _ACT_ABBREVIATIONS = {
     "mva": ("motor", "vehicles"),
     "mv": ("motor", "vehicles"),
-    "bns": ("bharatiya", "nyaya", "sanhita"),
-    "bnss": ("bharatiya", "nagarik", "suraksha", "sanhita"),
+    "bns": ("nyaya",),
+    "bnss": ("nagarik", "suraksha"),
+    "bsa": ("sakshya",),
     "ipc": ("penal",),
-    "crpc": ("criminal", "procedure"),
+    "crpc": ("criminal",),
+    "iea": ("evidence",),
     "tpa": ("transfer", "property"),
     "sra": ("specific", "relief"),
-    "cpa": ("consumer", "protection"),
-    "cpc": ("civil", "procedure"),
+    "cpa": ("consumer",),
+    "cpc": ("civil",),
     "rera": ("real", "estate", "regulation"),
+    "pca": ("cruelty", "animals"),
 }
 
 
@@ -214,8 +322,9 @@ def normalize_section_id(raw_section: Optional[str]) -> str:
     if order_rule:
         return f"{order_rule.group(1)}({order_rule.group(2)})"
     s = re.sub(r"^(?:sections?|secs?\.?|s\.|rule|art\.?|article)\s*", "", s).strip()
-    # Extract primary section token with optional letter suffix and parenthesized clause
-    m = re.search(r"(\d+\s*-?\s*[a-z]?(?:\(\s*[0-9a-z]+\s*\))?)", s)
+    # Extract primary section token with optional letter suffix and parenthesized clause. The suffix letter must
+    # stand alone ("53-A", "163A"), so the first letter of a following Act abbreviation ("173 BNSS") is not taken.
+    m = re.search(r"(\d+(?:\s*-?\s*[a-z](?![a-z]))?(?:\s*\(\s*[0-9a-z]+\s*\))?)", s)
     if not m:
         return re.sub(r"[^0-9a-z()]", "", s)
     token = m.group(1)
@@ -263,6 +372,45 @@ def acts_share_significant_token(act_a: Optional[str], act_b: Optional[str]) -> 
     if not tokens_a or not tokens_b:
         return False
     return bool(tokens_a & tokens_b)
+
+
+# Phrase/abbreviation patterns that identify an Act inside free text such as a step's statutory_basis
+# ("Section 166, Motor Vehicles Act" or "BNSS s.173"). Phrases rather than single words, so ordinary words
+# like "property" or "criminal" in a sentence are not mistaken for an Act name.
+_ACT_MENTION_PATTERNS = {
+    "mva": re.compile(r"\bmotor\s+vehicles?\b|\bmva\b|\bm\.?\s?v\.?\s+act\b", re.IGNORECASE),
+    "bns": re.compile(r"\bnyaya\s+sanhita\b|\bbns\b", re.IGNORECASE),
+    "bnss": re.compile(r"\bnagarik\s+suraksha\b|\bbnss\b", re.IGNORECASE),
+    "bsa": re.compile(r"\bsakshya\s+adhiniyam\b|\bbsa\b", re.IGNORECASE),
+    "ipc": re.compile(r"\bpenal\s+code\b|\bipc\b", re.IGNORECASE),
+    "crpc": re.compile(
+        r"\bcode\s+of\s+criminal\s+procedure\b|\bcriminal\s+procedure\s+code\b|\bcr\.?\s?p\.?\s?c\b", re.IGNORECASE
+    ),
+    "cpc": re.compile(r"\bcode\s+of\s+civil\s+procedure\b|\bcivil\s+procedure\s+code\b|\bcpc\b", re.IGNORECASE),
+    "tpa": re.compile(r"\btransfer\s+of\s+property\b|\btpa\b", re.IGNORECASE),
+    "sra": re.compile(r"\bspecific\s+relief\b|\bsra\b", re.IGNORECASE),
+    "cpa": re.compile(r"\bconsumer\s+protection\b|\bcpa\b", re.IGNORECASE),
+    "rera": re.compile(r"\breal\s+estate\b|\brera\b", re.IGNORECASE),
+    "pca": re.compile(r"\bcruelty\s+to\s+animals\b|\bpca\b", re.IGNORECASE),
+    "iea": re.compile(r"\bindian\s+evidence\s+act\b|\bevidence\s+act\b|\biea\b", re.IGNORECASE),
+    "registration": re.compile(r"\bregistration\s+act\b", re.IGNORECASE),
+    "easements": re.compile(r"\b(?:indian\s+)?easements?\s+act\b", re.IGNORECASE),
+    "limitation": re.compile(r"\blimitation\s+act\b", re.IGNORECASE),
+    "ni": re.compile(r"\bnegotiable\s+instruments?\b|\bn\.?\s?i\.?\s+act\b", re.IGNORECASE),
+    "it": re.compile(r"\binformation\s+technology\s+act\b|\bi\.?\s?t\.?\s+act\b", re.IGNORECASE),
+    "hma": re.compile(r"\bhindu\s+marriage\s+act\b|\bhma\b", re.IGNORECASE),
+    "dv": re.compile(r"\bdomestic\s+violence\b|\bpwdva\b", re.IGNORECASE),
+    "rti": re.compile(r"\bright\s+to\s+information\b|\brti\s+act\b", re.IGNORECASE),
+    "arbitration": re.compile(r"\barbitration\s+and\s+conciliation\b", re.IGNORECASE),
+    "contract": re.compile(r"\bindian\s+contract\s+act\b|\bcontract\s+act\b", re.IGNORECASE),
+}
+
+
+def canonical_act_keys(text: Optional[str]) -> FrozenSet[str]:
+    """Return canonical keys (e.g. {'mva', 'bnss'}) of the Acts named in free text or an Act title."""
+    if not text:
+        return frozenset()
+    return frozenset(key for key, pattern in _ACT_MENTION_PATTERNS.items() if pattern.search(text))
 
 
 def section_mentioned_with_boundary(section_number: Optional[str], text: Optional[str]) -> bool:

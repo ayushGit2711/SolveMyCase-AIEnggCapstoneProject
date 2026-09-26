@@ -14,19 +14,32 @@ from solvemycase.evaluation.sme_review import (
 from solvemycase.ui.components.formatting import domain_label_from_value
 from solvemycase.ui.state import load_benchmark_dataset, load_benchmark_results
 
-GUARDRAIL_DOMAIN = "general_dispute"  # Benchmark cases in this domain are out-of-scope guardrail tests.
+GUARDRAIL_DOMAIN = "general_dispute"  # Legacy fallback when row lacks is_legal/coverage.
 GUARDRAIL_LABEL = "Out of scope (guardrail)"
+UNCOVERED_LABEL = "Outside corpus coverage"
 
 
-def _category(domain: Optional[str]) -> str:
-    """Display label for a benchmark domain value."""
-    return GUARDRAIL_LABEL if domain == GUARDRAIL_DOMAIN else domain_label_from_value(domain)
+def _category(item: Any) -> str:
+    """Display label for a benchmark scenario or result row."""
+    if isinstance(item, dict):
+        if not item.get("is_legal", True):
+            return GUARDRAIL_LABEL
+        if item.get("coverage") == "uncovered":
+            return UNCOVERED_LABEL
+        domain = item.get("domain")
+        if domain == GUARDRAIL_DOMAIN and "is_legal" not in item and "coverage" not in item:
+            return GUARDRAIL_LABEL
+        return domain_label_from_value(domain)
+    return GUARDRAIL_LABEL if item == GUARDRAIL_DOMAIN else domain_label_from_value(item)
 
 
 SUMMARY_ROWS = [
     ("Post-output hallucination rate (%)", "avg_hallucination_rate", "{:.1f}"),
+    ("Irrelevant citation rate (%)", "avg_irrelevant_citation_rate", "{:.1f}"),
     ("Citation grounding accuracy (%)", "avg_grounding_accuracy", "{:.1f}"),
     ("Pre-verification strip rate (%)", "avg_pre_verification_strip_rate", "{:.1f}"),
+    ("Uncovered-topic honesty rate (%)", "uncovered_honesty_rate", "{:.1f}"),
+    ("False coverage-gap rate (%)", "false_gap_rate", "{:.1f}"),
     ("Retrieval Section Recall@K (%)", "avg_section_recall_at_k", "{:.1f}"),
     ("Retrieval Precision@K (%)", "avg_precision_at_k", "{:.1f}"),
     ("Retrieval Mean Reciprocal Rank (MRR)", "avg_mrr", "{:.2f}"),
@@ -64,7 +77,7 @@ def _per_scenario_rows(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         p = r.get("proposed", {})
         rows.append({
             "Scenario": r.get("scenario_id", ""),
-            "Domain": _category(r.get("domain")),
+            "Domain": _category(r),
             "A judge": b.get("judge_score", 0.0),
             "B judge": p.get("judge_score", 0.0),
             "A Recall@K": b.get("section_recall_at_k", 0.0),
@@ -151,12 +164,12 @@ def _render_sme_tab(results: Dict[str, Any]) -> None:
 
 def render() -> None:
     """Render the benchmark page."""
-    st.title("Benchmark")
+    st.header("Benchmark")
     dataset = load_benchmark_dataset()
     results = load_benchmark_results()
 
     st.subheader("Evaluation dataset")
-    counts = Counter(_category(s.get("domain")) for s in dataset)
+    counts = Counter(_category(s) for s in dataset)
     cols = st.columns(len(counts) + 1)
     cols[0].metric("Total scenarios", len(dataset))
     for col, (name, count) in zip(cols[1:], sorted(counts.items())):

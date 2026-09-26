@@ -9,8 +9,7 @@
       "134",
       "166",
       "161",
-      "106",
-      "281"
+      "BNS 281"
     ],
     "expected_forum": [
       "MACT",
@@ -21,6 +20,21 @@
       "FIR",
       "Medical records",
       "MACT claim petition"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -44,6 +58,21 @@
       "Post-mortem report",
       "Hit and Run compensation application"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -65,6 +94,21 @@
       "Driver license copy",
       "MACT claim against owner"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -75,7 +119,7 @@
     "expected_act": "Motor Vehicles Act, 1988",
     "expected_sections": [
       "166",
-      "281"
+      "BNS 281"
     ],
     "expected_forum": [
       "MACT",
@@ -85,6 +129,21 @@
       "FIR under BNS 281",
       "Disability certificate",
       "Section 166 claim"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -96,7 +155,7 @@
     "expected_act": "Motor Vehicles Act, 1988",
     "expected_sections": [
       "166",
-      "106"
+      "BNS 106"
     ],
     "expected_forum": [
       "MACT",
@@ -106,6 +165,21 @@
       "FIR",
       "Sarla Verma multiplier calculation",
       "MACT petition"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -128,6 +202,21 @@
       "Implead both driver and aggregator",
       "MACT claim"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -138,7 +227,7 @@
     "expected_act": "Motor Vehicles Act, 1988",
     "expected_sections": [
       "166",
-      "106"
+      "BNS 281"
     ],
     "expected_forum": [
       "MACT",
@@ -148,6 +237,21 @@
       "Medical board disability certificate",
       "Income tax returns proof",
       "Section 166 petition"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -160,7 +264,7 @@
     "expected_sections": [
       "185",
       "166",
-      "281"
+      "BNS 281"
     ],
     "expected_forum": [
       "Magistrate Court",
@@ -170,6 +274,21 @@
       "Breathalyzer record",
       "FIR copy",
       "MACT claim against driver and insurer"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -192,6 +311,21 @@
       "FIR against driver and conductor",
       "Section 166 claim"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -213,6 +347,21 @@
       "Implead vehicle registered owner",
       "MACT claim"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -231,6 +380,21 @@
       "File at place of accident or claimant residence under S.166(2)",
       "FIR",
       "Insurance notice"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -252,6 +416,21 @@
       "Police panchnama",
       "Section 166 third party property claim"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -262,8 +441,7 @@
     "expected_act": "Motor Vehicles Act, 1988",
     "expected_sections": [
       "166",
-      "281",
-      "106"
+      "BNS 281"
     ],
     "expected_forum": [
       "MACT",
@@ -273,6 +451,21 @@
       "FIR against school management and driver",
       "Motor vehicle inspection report",
       "MACT claim"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -295,6 +488,21 @@
       "Hit and Run FIR",
       "District Magistrate Solatium claim"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -305,7 +513,7 @@
     "expected_act": "Motor Vehicles Act, 1988",
     "expected_sections": [
       "147",
-      "149",
+      "150",
       "166"
     ],
     "expected_forum": [
@@ -316,6 +524,21 @@
       "Policy terms review",
       "Pay and Recover doctrine submission",
       "MACT claim against owner"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "MVA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "INSA",
+      "JJA",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": true
   },
@@ -328,7 +551,7 @@
     "expected_sections": [
       "54",
       "53A",
-      "6"
+      "SRA 6"
     ],
     "expected_forum": [
       "Civil Court",
@@ -338,6 +561,34 @@
       "Legal notice",
       "Suit for declaration and possession",
       "Section 53A part performance defence"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -360,7 +611,35 @@
       "Arrears calculation",
       "Suit for ejectment"
     ],
-    "expects_criminal_route": false
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "prop_003",
@@ -378,7 +657,35 @@
     "critical_steps": [
       "Site photographs",
       "Municipal stop-work complaint",
-      "Suit for permanent & mandatory injunction"
+      "Suit for permanent & mandatory injunctions"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -402,7 +709,35 @@
       "Suit for specific performance of contract",
       "Injunction restraining 3rd party creation"
     ],
-    "expects_criminal_route": false
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "prop_005",
@@ -419,6 +754,34 @@
     "critical_steps": [
       "File summary suit under Section 6 SRA within 6 months of dispossession",
       "Possession proof"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -442,7 +805,35 @@
       "Partition suit",
       "FIR for forgery & cheating"
     ],
-    "expects_criminal_route": false
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "prop_007",
@@ -452,7 +843,7 @@
     "expected_act": "Specific Relief Act, 1963",
     "expected_sections": [
       "6",
-      "106"
+      "TPA 106"
     ],
     "expected_forum": [
       "Civil Court",
@@ -462,6 +853,34 @@
       "Police complaint for illegal lock-out",
       "Summary suit under Section 6 SRA",
       "Inventory commissioner application"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -481,6 +900,34 @@
       "Legal notice for amicable division",
       "Suit for partition by metes and bounds",
       "Injunction against alienation"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -503,6 +950,34 @@
       "Structural engineer safety report",
       "Municipal inspection"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -523,6 +998,34 @@
       "Suit for declaration of tenancy rights and damages",
       "Local commissioner appointment"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -542,6 +1045,34 @@
       "Notice to Registrar of Societies",
       "Injunction restraining discriminatory restriction"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -552,7 +1083,7 @@
     "expected_act": "Transfer of Property Act, 1882",
     "expected_sections": [
       "55",
-      "318"
+      "BNS 318"
     ],
     "expected_forum": [
       "Civil Court",
@@ -562,6 +1093,34 @@
       "Search report of encumbrance",
       "Criminal complaint for cheating",
       "Suit for recovery of earnest money with interest"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -583,6 +1142,34 @@
       "Statutory notice under S.80 CPC",
       "Mandatory injunction or Article 226 writ"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -602,6 +1189,34 @@
       "Time is essence clause review",
       "Forfeiture legal notice",
       "Suit for declaration / rescission"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -623,6 +1238,34 @@
       "Land boundary survey",
       "Police complaint for criminal trespass under BNS 329",
       "Suit for permanent injunction with ad-interim stay"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "TPA",
+      "SRA",
+      "BNS",
+      "BNSS",
+      "CPC",
+      "RERA",
+      "IPC",
+      "CrPC",
+      "REG",
+      "STAMP",
+      "ICA",
+      "EASE",
+      "HSA",
+      "PARTITION",
+      "SARFAESI",
+      "RENT",
+      "COOP",
+      "LARR",
+      "REVENUE",
+      "ELEC",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -648,6 +1291,30 @@
       "Formal legal notice",
       "Section 35 Consumer Complaint"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -671,6 +1338,30 @@
       "Experion Developers precedent citation",
       "Consumer complaint for refund with interest"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -693,6 +1384,30 @@
       "Automobile product liability action under S.84",
       "Consumer complaint for full vehicle replacement and damages"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": true
   },
   {
@@ -713,6 +1428,30 @@
       "Hospital discharge summary",
       "Representation to Insurance Ombudsman",
       "Section 35 Consumer Complaint for deficiency"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -735,6 +1474,30 @@
       "DGCA Air Passenger Charter notice",
       "Consumer forum petition for compensation"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -755,6 +1518,30 @@
       "Hospital medication chart",
       "Expert medical negligence opinion",
       "Consumer complaint for medical negligence"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -778,6 +1565,30 @@
       "CCPA coaching fee refund guidelines notice",
       "Consumer complaint"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -798,6 +1609,30 @@
       "Service job card",
       "Independent laboratory oil sample analysis",
       "Consumer complaint for deficiency & product liability"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -820,6 +1655,30 @@
       "RBI zero-liability customer circular citation",
       "Banking Ombudsman complaint / DCDRC"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -841,7 +1700,31 @@
       "Doctor prescription and medical bills",
       "Consumer complaint for product liability and religious hurt"
     ],
-    "expects_criminal_route": false
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
+    "expects_criminal_route": true
   },
   {
     "id": "cpa_011",
@@ -861,7 +1744,31 @@
       "Airport denied boarding slip",
       "Consumer claim for fare difference and mental agony"
     ],
-    "expects_criminal_route": true
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
+    "expects_criminal_route": false
   },
   {
     "id": "cpa_012",
@@ -882,6 +1789,30 @@
       "Product packaging evidence",
       "Class action complaint to CCPA under S.10",
       "DCDRC claim"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -905,6 +1836,30 @@
       "Appellate authority notice",
       "Consumer complaint for unfair trade practice"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -924,6 +1879,30 @@
       "Warranty card and purchase invoice",
       "Customer service ticket logs",
       "Section 35 Consumer Complaint for refund"
+    ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
     ],
     "expects_criminal_route": false
   },
@@ -946,6 +1925,30 @@
       "Receipt showing unconscionable limitation of liability",
       "Consumer complaint for full value compensation"
     ],
+    "coverage": "covered",
+    "acceptable_acts": [
+      "CPA",
+      "BNS",
+      "BNSS",
+      "IPC",
+      "CrPC",
+      "SOGA",
+      "FSSA",
+      "DCA",
+      "LMA",
+      "INSA",
+      "AVIATION",
+      "TELECOM",
+      "BANKING",
+      "ITA",
+      "RERA",
+      "MED",
+      "BSA",
+      "IEA",
+      "LIM",
+      "LSAA",
+      "CONST"
+    ],
     "expects_criminal_route": false
   },
   {
@@ -957,6 +1960,8 @@
     "expected_sections": [],
     "expected_forum": [],
     "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
     "expects_criminal_route": false
   },
   {
@@ -968,6 +1973,8 @@
     "expected_sections": [],
     "expected_forum": [],
     "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
     "expects_criminal_route": false
   },
   {
@@ -979,6 +1986,8 @@
     "expected_sections": [],
     "expected_forum": [],
     "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
     "expects_criminal_route": false
   },
   {
@@ -990,6 +1999,8 @@
     "expected_sections": [],
     "expected_forum": [],
     "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
     "expects_criminal_route": false
   },
   {
@@ -1001,6 +2012,8 @@
     "expected_sections": [],
     "expected_forum": [],
     "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
     "expects_criminal_route": false
   },
   {
@@ -1012,6 +2025,8 @@
     "expected_sections": [],
     "expected_forum": [],
     "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
     "expects_criminal_route": false
   },
   {
@@ -1021,6 +2036,185 @@
     "is_legal": false,
     "expected_act": null,
     "expected_sections": [],
+    "expected_forum": [],
+    "critical_steps": [],
+    "coverage": "covered",
+    "acceptable_acts": [],
+    "expects_criminal_route": false
+  },
+  {
+    "id": "gen_001",
+    "scenario": "A watchman in our housing society beat and killed my pet cat with a stick yesterday. What legal action can I take against him?",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "covered",
+    "expected_act": "Bharatiya Nyaya Sanhita, 2023",
+    "expected_sections": [
+      "325",
+      "PCA 11"
+    ],
+    "acceptable_acts": [
+      "BNS 325",
+      "PCA 11",
+      "BNSS",
+      "CrPC"
+    ],
+    "expected_forum": [
+      "Police Station",
+      "Magistrate"
+    ],
+    "critical_steps": [
+      "FIR",
+      "Post-mortem",
+      "Veterinary"
+    ],
+    "expects_criminal_route": true
+  },
+  {
+    "id": "uncov_001",
+    "scenario": "My husband and in-laws have been harassing me continuously for Rs. 15 lakhs in dowry and threatened to throw me out of the matrimonial home. What legal steps can I take?",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "BNSS",
+      "CrPC",
+      "DPA",
+      "PWDVA"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": true
+  },
+  {
+    "id": "uncov_002",
+    "scenario": "My private software employer in Hyderabad has not paid my monthly salary for the last four months despite my completing notice period formalities.",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "PWA",
+      "COW",
+      "IDA",
+      "IRC",
+      "SEA"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": false
+  },
+  {
+    "id": "uncov_003",
+    "scenario": "A fraudster tricked me into sharing a screen-mirroring app and drained Rs. 1,40,000 from my savings account through three unauthorized UPI transfers.",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "BNSS",
+      "CrPC",
+      "BNS 318",
+      "ITA",
+      "BANKING"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": true
+  },
+  {
+    "id": "uncov_004",
+    "scenario": "My spouse deserted me two years ago and refuses to pay monthly maintenance for me and our six-year-old child. How do I file for divorce and maintenance?",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "HMA",
+      "HAMA",
+      "SMA",
+      "PLAW",
+      "FCA",
+      "GWA",
+      "BNSS",
+      "CrPC"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": false
+  },
+  {
+    "id": "uncov_005",
+    "scenario": "A former business partner posted false allegations on social media accusing me of embezzlement, damaging my professional reputation among clients.",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "BNSS",
+      "CrPC",
+      "ITA"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": false
+  },
+  {
+    "id": "uncov_006",
+    "scenario": "My neighbour lets his aggressive pet dog roam unleashed in the corridor and it bit my ten-year-old daughter on the leg, requiring anti-rabies vaccinations.",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "BNSS",
+      "CrPC"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": false
+  },
+  {
+    "id": "uncov_007",
+    "scenario": "A wholesale distributor issued a post-dated cheque of Rs. 4,50,000 towards goods supplied, and the cheque was dishonoured by the bank with the memo 'Insufficient Funds'.",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "NIA",
+      "BNSS",
+      "CrPC"
+    ],
+    "expected_forum": [],
+    "critical_steps": [],
+    "expects_criminal_route": false
+  },
+  {
+    "id": "uncov_008",
+    "scenario": "My previous employer deducted Employee Provident Fund (EPF) contributions from my payslips for 18 months but never deposited the amount with EPFO.",
+    "domain": "general_dispute",
+    "is_legal": true,
+    "coverage": "uncovered",
+    "expected_act": null,
+    "expected_sections": [],
+    "acceptable_acts": [
+      "EPFA",
+      "CSS",
+      "PWA",
+      "COW",
+      "BNSS",
+      "CrPC",
+      "BNS 316"
+    ],
     "expected_forum": [],
     "critical_steps": [],
     "expects_criminal_route": false

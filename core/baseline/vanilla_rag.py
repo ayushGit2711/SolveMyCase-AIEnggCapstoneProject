@@ -7,9 +7,11 @@ Implements the single-prompt baseline architecture required for comparative eval
 """
 
 import json
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 from openai import OpenAI
 
+from solvemycase.config.openai_client import build_openai_client
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.data.ingestion.schema import (
     DocumentType,
@@ -24,6 +26,8 @@ from solvemycase.data.ingestion.schema import (
 )
 from solvemycase.data.vectorstore.indexer import EmbeddingProvider
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
+
+logger = logging.getLogger(__name__)
 
 
 VANILLA_RAG_SYSTEM_PROMPT = """You are an Indian legal assistant.
@@ -82,15 +86,14 @@ class VanillaRAGBaseline:
         self.settings = settings or get_settings()
         self.store = store or QdrantLegalStore(settings=self.settings)
         self.embedder = embedder or EmbeddingProvider(settings=self.settings)
-        self._openai_client: Optional[OpenAI] = None
-
-        if self.settings.openai_api_key and self.settings.openai_api_key.get_secret_value():
-            self._openai_client = OpenAI(api_key=self.settings.openai_api_key.get_secret_value())
+        self._openai_client: Optional[OpenAI] = build_openai_client(self.settings)
 
     def run_with_trace(self, scenario: str, top_k: int = 4) -> Tuple[DualOutputResponse, ExecutionTrace]:
         """Execute the baseline Vanilla RAG pipeline and return both response and ExecutionTrace."""
-        # 1. Single direct vector embedding
-        query_embedding = self.embedder.get_embeddings([scenario])[0]
+        # 1. Single direct vector embedding (falling back to BM25-only if the embedder space mismatches the index)
+        embeddings = self.embedder.get_embeddings([scenario])
+        embedder_id = getattr(self.embedder, "last_embedder_id", "")
+        query_embedding = embeddings[0] if self.store.embedding_space_matches(embedder_id) else None
 
         # 2. Direct dense retrieval from Qdrant
         retrieved_contexts: List[RetrievedContext] = self.store.hybrid_search(
@@ -133,7 +136,7 @@ class VanillaRAGBaseline:
                 data = json.loads(raw_json)
                 return DualOutputResponse(**data), trace
             except Exception as e:
-                print(f"[VanillaRAG] OpenAI call failed ({e}). Returning structured fallback.")
+                logger.warning("OpenAI vanilla RAG call failed (%s); returning structured fallback.", e)
 
         # Fallback offline generation based on retrieved contexts
         return self._generate_fallback_response(scenario, retrieved_contexts), trace

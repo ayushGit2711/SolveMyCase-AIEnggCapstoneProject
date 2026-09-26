@@ -24,14 +24,18 @@ from solvemycase.data.ingestion.schema import (
     section_mentioned_with_boundary,
     sections_match,
 )
+from solvemycase.evaluation.comparative_runner import ComparativeRunner
 from solvemycase.evaluation.llm_judge import LegalLLMJudge
 from solvemycase.evaluation.metrics import (
     compute_agent_trace_metrics,
     compute_citation_grounding_metrics,
     compute_context_relevance,
     compute_ground_truth_alignment,
+    compute_irrelevant_citation_rate,
     compute_procedural_completeness,
     compute_retrieval_metrics,
+    expected_section_refs,
+    parse_act_section,
     verify_target_forum,
 )
 from solvemycase.evaluation.noise_sensitivity import (
@@ -47,20 +51,27 @@ from solvemycase.evaluation.sme_review import (
 
 
 def test_benchmark_dataset_integrity_and_100_percent_corpus_coverage():
-    """Verify benchmark dataset has 52 scenarios and 100% of expected_sections exist in FALLBACK_PROVISIONS."""
+    """Verify benchmark dataset has 61 scenarios (including gen_001 and 8 uncovered) and 100% corpus section coverage."""
     dataset_path = Path(__file__).parent.parent / "evaluation" / "benchmark_dataset.json"
     assert dataset_path.exists(), "benchmark_dataset.json must exist"
 
     with open(dataset_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    assert len(data) >= 50, f"Expected 50+ scenarios, found {len(data)}"
+    assert len(data) == 61, f"Expected 61 scenarios, found {len(data)}"
+    ids = {item["id"] for item in data}
+    assert "gen_001" in ids
+    uncovered = [item for item in data if item.get("coverage") == "uncovered"]
+    assert len(uncovered) == 8
 
-    corpus_sections = {
-        normalize_section_id(item["section_number"])
+    corpus_pairs = {
+        (ref.act_key, ref.section)
         for item in FALLBACK_PROVISIONS
         if item.get("section_number")
+        for ref in [parse_act_section(item["section_number"], default_act=item.get("act_name", ""))]
+        if ref is not None
     }
+    corpus_sections = {sec for _, sec in corpus_pairs if sec}
 
     missing_sections = set()
     for item in data:
@@ -69,9 +80,14 @@ def test_benchmark_dataset_integrity_and_100_percent_corpus_coverage():
         assert "domain" in item
         assert "is_legal" in item
         assert "expects_criminal_route" in item
-        for sec in item.get("expected_sections", []):
-            if normalize_section_id(sec) not in corpus_sections:
-                missing_sections.add(sec)
+        assert item.get("coverage") in ("covered", "uncovered")
+        assert isinstance(item.get("acceptable_acts"), list)
+        for ref in expected_section_refs(item):
+            if ref.act_key:
+                if (ref.act_key, ref.section) not in corpus_pairs:
+                    missing_sections.add(f"{ref.act_key}:{ref.section}")
+            elif ref.section not in corpus_sections:
+                missing_sections.add(str(ref.section))
 
     assert not missing_sections, f"Benchmark expected_sections missing from corpus: {missing_sections}"
 
@@ -128,7 +144,7 @@ def test_verification_node_prevents_cross_act_splicing_and_sanitizes_2_digit_bas
         statutory_basis="Section 16 of Specific Relief Act",
     )
 
-    verifier = VerificationNode(store=None)
+    verifier = VerificationNode()
     out = verifier.verify({
         "retrieved_contexts": [mva_context],
         "draft_statutory_citations": [spliced_cit, valid_cit],
@@ -198,6 +214,13 @@ def test_symmetric_citation_grounding_and_df2_vacuous_guard():
     empty_metrics = compute_citation_grounding_metrics(empty_legal_resp, retrieved_contexts=[ctx], is_legal=True)
     assert empty_metrics["grounding_accuracy"] == 0.0
 
+    # Uncovered legal query with abstention_ok=True and zero citations gets 1.0 grounding accuracy
+    abstention_metrics = compute_citation_grounding_metrics(
+        empty_legal_resp, retrieved_contexts=[], is_legal=True, abstention_ok=True
+    )
+    assert abstention_metrics["grounding_accuracy"] == 1.0
+    assert abstention_metrics["hallucination_rate"] == 0.0
+
     # Guardrail rejection on non-legal query gets 1.0 grounding accuracy and 0.0 strip rate for Clarification prompt
     rejection_resp = DualOutputResponse(
         scenario_summary="Query rejected: Non-legal cooking query",
@@ -228,6 +251,7 @@ def test_retrieval_and_agent_trace_metrics():
     )
     meta = {
         "is_legal": True,
+        "coverage": "covered",
         "expected_act": "Motor Vehicles Act, 1988",
         "expected_sections": ["166", "134"],
         "expected_forum": ["MACT"],
@@ -248,6 +272,7 @@ def test_retrieval_and_agent_trace_metrics():
             "guardrail",
             "decontextualize",
             "retrieve_and_rerank",
+            "applicability_check",
             "procedural_planner",
             "verification",
             "synthesis",
@@ -343,7 +368,7 @@ def test_noise_sensitivity_and_sme_agreement(tmp_path):
     """UT-6, UT-7, IT-3, DF-6: Test noise sensitivity harness, SME atomic persistence, and agreement stats."""
     settings = Settings(openai_api_key=None)
     planner = ProceduralPlannerAgent(settings=settings)
-    verifier = VerificationNode(settings=settings, store=None)
+    verifier = VerificationNode(settings=settings)
 
     clean_ctx = RetrievedContext(
         chunk_id="mva_166",
@@ -408,3 +433,223 @@ def test_noise_sensitivity_and_sme_agreement(tmp_path):
     events = load_telemetry_events(path=tel_path)
     assert len(events) == 1
     assert events[0]["latency_ms"] == 12.5
+
+
+def test_phase_c_irrelevant_citation_rate_and_act_aware_matching():
+    """Phase C: Verify compute_irrelevant_citation_rate and Act-aware BNS 106 vs TPA 106 disambiguation."""
+    cat_meta = {
+        "is_legal": True,
+        "coverage": "covered",
+        "domain": "general_dispute",
+        "expected_act": "Bharatiya Nyaya Sanhita, 2023",
+        "acceptable_acts": ["Bharatiya Nyaya Sanhita, 2023", "Prevention of Cruelty to Animals Act, 1960"],
+        "expected_sections": ["325", "PCA 11"],
+    }
+    bns_325 = StatutoryCitation(
+        act_name="Bharatiya Nyaya Sanhita, 2023",
+        section_number="325",
+        summary_of_provision="Mischief by killing or maiming animal",
+        applicability_to_scenario="Applies to killing pet cat",
+        source_url="https://indiankanoon.org/doc/87370675/",
+    )
+    tpa_106 = StatutoryCitation(
+        act_name="Transfer of Property Act, 1882",
+        section_number="106",
+        summary_of_provision="Lease termination notice",
+        applicability_to_scenario="Wrongly retrieved",
+        source_url="https://indiacode.gov.in/handle/123456789/2338",
+    )
+    resp_mixed = DualOutputResponse(
+        scenario_summary="Cat killed",
+        domain=LegalDomain.GENERAL_DISPUTE,
+        action_plan=[],
+        statutory_citations=[bns_325, tpa_106],
+    )
+    assert compute_irrelevant_citation_rate(resp_mixed, cat_meta) == 0.5
+
+    # Uncovered scenario: any citation is 100% irrelevant; zero citations is 0.0
+    uncov_meta = {
+        "is_legal": True,
+        "coverage": "uncovered",
+        "domain": "general_dispute",
+        "acceptable_acts": [],
+        "expected_sections": [],
+    }
+    assert compute_irrelevant_citation_rate(resp_mixed, uncov_meta) == 1.0
+    resp_empty = DualOutputResponse(
+        scenario_summary="Coverage gap",
+        domain=LegalDomain.GENERAL_DISPUTE,
+        action_plan=[],
+        statutory_citations=[],
+        coverage_note="Our database currently holds selected sections...",
+    )
+    assert compute_irrelevant_citation_rate(resp_empty, uncov_meta) == 0.0
+
+    # Act-aware disambiguation: TPA 106 must NOT satisfy expected "BNS 106"
+    tpa_ctx = RetrievedContext(
+        chunk_id="tpa_106",
+        doc_type=DocumentType.STATUTE,
+        domain=LegalDomain.PROPERTY_CONFLICT,
+        title="Transfer of Property Act, 1882 - Section 106",
+        citation_or_section="Section 106",
+        act_name="Transfer of Property Act, 1882",
+        text="Section 106: Duration of certain leases.",
+        source_url="https://indiacode.gov.in/handle/123456789/2338",
+        score=0.8,
+    )
+    mva_meta = {
+        "is_legal": True,
+        "coverage": "covered",
+        "expected_act": "Motor Vehicles Act, 1988",
+        "expected_sections": ["166", "BNS 106"],
+        "critical_steps": [],
+    }
+    ret = compute_retrieval_metrics([tpa_ctx], mva_meta, k=5)
+    assert ret["section_recall_at_k"] == 0.0
+    align = compute_ground_truth_alignment(
+        mva_meta,
+        DualOutputResponse(
+            scenario_summary="Fatal crash",
+            domain=LegalDomain.MOTOR_VEHICLE_ACCIDENT,
+            action_plan=[],
+            statutory_citations=[tpa_106],
+        ),
+    )
+    assert align["expected_section_recall"] == 0.0
+
+
+def test_phase_c_uncovered_judge_and_summary_aggregation():
+    """Phase C: Verify uncovered trajectory validation, deterministic uncovered judge, and summary rates."""
+    from solvemycase.core.proposed.coverage import build_coverage_gap_response
+
+    uncov_meta = {
+        "is_legal": True,
+        "coverage": "uncovered",
+        "domain": "general_dispute",
+        "acceptable_acts": [],
+        "expected_sections": [],
+        "expected_forum": [],
+        "critical_steps": [],
+        "expects_criminal_route": False,
+    }
+    gap_trace = ExecutionTrace(
+        pipeline_type="proposed_langgraph",
+        nodes_visited=[
+            "guardrail",
+            "decontextualize",
+            "retrieve_and_rerank",
+            "applicability_check",
+            "synthesis",
+        ],
+        coverage_gap=True,
+        coverage_gap_reason="no_applicable_provisions",
+    )
+    honest_resp = build_coverage_gap_response(
+        "My husband wants a divorce",
+        LegalDomain.GENERAL_DISPUTE,
+        "Our database currently holds selected sections...",
+    )
+    agent_m = compute_agent_trace_metrics(gap_trace, uncov_meta, honest_resp)
+    assert agent_m["trajectory_valid"] is True
+    assert agent_m["coverage_gap"] is True
+    assert agent_m["task_success"] is True
+
+    judge = LegalLLMJudge(settings=Settings(openai_api_key="sk-should-not-be-called"))
+    honest_score = judge.judge_response("My husband wants a divorce", uncov_meta, honest_resp)
+    assert honest_score.overall_score == 5.0
+
+    # Baseline hallucinating citations on an uncovered topic gets 0.0
+    bad_uncov_resp = DualOutputResponse(
+        scenario_summary="Hallucinated",
+        domain=LegalDomain.GENERAL_DISPUTE,
+        action_plan=[],
+        statutory_citations=[
+            StatutoryCitation(
+                act_name="Consumer Protection Act, 2019",
+                section_number="35",
+                summary_of_provision="District Commission",
+                applicability_to_scenario="Wrong",
+                source_url="https://indiacode.gov.in/handle/123456789/15256",
+            )
+        ],
+    )
+    bad_score = judge.judge_response("My husband wants a divorce", uncov_meta, bad_uncov_resp)
+    assert bad_score.overall_score == 0.0
+
+    # Summary aggregation over synthetic covered + uncovered rows
+    synthetic_rows = [
+        {
+            "scenario_id": "mva_001",
+            "domain": "motor_vehicle_accident",
+            "is_legal": True,
+            "coverage": "covered",
+            "proposed": {
+                "latency_seconds": 1.0,
+                "hallucination_rate": 0.0,
+                "grounding_accuracy": 1.0,
+                "pre_verification_strip_rate": 0.0,
+                "irrelevant_citation_rate": 0.0,
+                "coverage_gap": False,
+                "step_count": 6,
+                "completeness_score": 1.0,
+                "forum_matched": True,
+                "section_recall_at_k": 1.0,
+                "precision_at_k": 0.8,
+                "mrr": 1.0,
+                "context_relevance": 0.9,
+                "expected_section_recall": 1.0,
+                "critical_steps_recall": 1.0,
+                "trajectory_valid": True,
+                "criminal_routing_correct": True,
+                "guardrail_tnr": 1.0,
+                "guardrail_fpr": 0.0,
+                "task_success": True,
+                "judge_score": 4.8,
+                "statutory_accuracy": 4.8,
+                "procedural_actionability": 4.8,
+                "forum_appropriateness": 5.0,
+                "hallucination_freedom": 5.0,
+                "coherence_and_specificity": 4.4,
+            },
+        },
+        {
+            "scenario_id": "uncov_001",
+            "domain": "general_dispute",
+            "is_legal": True,
+            "coverage": "uncovered",
+            "proposed": {
+                "latency_seconds": 0.8,
+                "hallucination_rate": 0.0,
+                "grounding_accuracy": 1.0,
+                "pre_verification_strip_rate": 0.0,
+                "irrelevant_citation_rate": 0.0,
+                "coverage_gap": True,
+                "step_count": 3,
+                "completeness_score": 0.6,
+                "forum_matched": True,
+                "section_recall_at_k": 1.0,
+                "precision_at_k": 1.0,
+                "mrr": 1.0,
+                "context_relevance": 1.0,
+                "expected_section_recall": 1.0,
+                "critical_steps_recall": 1.0,
+                "trajectory_valid": True,
+                "criminal_routing_correct": True,
+                "guardrail_tnr": 1.0,
+                "guardrail_fpr": 0.0,
+                "task_success": True,
+                "judge_score": 5.0,
+                "statutory_accuracy": 5.0,
+                "procedural_actionability": 5.0,
+                "forum_appropriateness": 5.0,
+                "hallucination_freedom": 5.0,
+                "coherence_and_specificity": 5.0,
+            },
+        },
+    ]
+    summary = ComparativeRunner._compute_side_summary(synthetic_rows, "proposed")
+    assert summary["avg_irrelevant_citation_rate"] == 0.0
+    assert summary["uncovered_honesty_rate"] == 100.0
+    assert summary["false_gap_rate"] == 0.0
+    assert summary["avg_section_recall_at_k"] == 100.0
+

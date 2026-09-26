@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 import sys
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 if importlib.util.find_spec("solvemycase") is None:
     _repo_root = Path(__file__).resolve().parent.parent
@@ -36,11 +36,12 @@ from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.proposed.graph import LegalAgentGraph
 from solvemycase.data.ingestion.schema import DualOutputResponse, LegalDomain
-from solvemycase.data.vectorstore.indexer import EmbeddingProvider, run_indexing_pipeline
+from solvemycase.data.vectorstore.indexer import EmbeddingProvider, ensure_index_current
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 from solvemycase.evaluation.metrics import (
     compute_citation_grounding_metrics,
     compute_procedural_completeness,
+    is_guardrail_rejection,
 )
 
 app = FastAPI(
@@ -67,14 +68,13 @@ _proposed: Optional[LegalAgentGraph] = None
 
 
 def get_engine():
-    """Lazy initialize engine instances."""
+    """Lazy initialize engine instances (re-indexing if the stored corpus or embedder is outdated)."""
     global _settings, _store, _embedder, _baseline, _proposed
     if _settings is None:
         _settings = get_settings()
         _store = QdrantLegalStore(settings=_settings)
-        if len(_store.corpus_documents) < 40:
-            run_indexing_pipeline(store=_store, download_corpus=False, force_reset=True)
         _embedder = EmbeddingProvider(settings=_settings)
+        ensure_index_current(_store, settings=_settings, embedder=_embedder)
         _baseline = VanillaRAGBaseline(settings=_settings, store=_store, embedder=_embedder)
         _proposed = LegalAgentGraph(settings=_settings, store=_store, embedder=_embedder)
     return _baseline, _proposed
@@ -123,15 +123,32 @@ def get_supported_domains() -> List[Dict[str, str]]:
     ]
 
 
+def _run_and_ground(engine: Any, scenario: str) -> Tuple[DualOutputResponse, Dict[str, float]]:
+    """Execute an engine (with trace when supported) and compute grounding metrics."""
+    if hasattr(engine, "run_with_trace"):
+        response, trace = engine.run_with_trace(scenario)
+        retrieved_contexts = getattr(trace, "retrieved_contexts", None)
+    else:
+        response = engine.run(scenario)
+        retrieved_contexts = None
+    grounding = compute_citation_grounding_metrics(
+        response,
+        retrieved_contexts=retrieved_contexts,
+        store=getattr(engine, "store", None),
+        is_legal=not is_guardrail_rejection(response),
+        abstention_ok=bool(response.coverage_note),
+    )
+    return response, grounding
+
+
 @app.post("/query/baseline", response_model=QueryExecutionResult)
 def query_baseline(req: LegalQueryRequest) -> QueryExecutionResult:
     """Execute Approach A: Baseline Vanilla RAG."""
     baseline_engine, _ = get_engine()
     t0 = time.perf_counter()
     try:
-        response = baseline_engine.run(req.scenario)
+        response, grounding = _run_and_ground(baseline_engine, req.scenario)
         latency = round(time.perf_counter() - t0, 4)
-        grounding = compute_citation_grounding_metrics(response)
         procedural = compute_procedural_completeness(response)
 
         return QueryExecutionResult(
@@ -151,9 +168,8 @@ def query_proposed(req: LegalQueryRequest) -> QueryExecutionResult:
     _, proposed_engine = get_engine()
     t0 = time.perf_counter()
     try:
-        response = proposed_engine.run(req.scenario)
+        response, grounding = _run_and_ground(proposed_engine, req.scenario)
         latency = round(time.perf_counter() - t0, 4)
-        grounding = compute_citation_grounding_metrics(response)
         procedural = compute_procedural_completeness(response)
 
         return QueryExecutionResult(

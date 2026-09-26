@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from solvemycase.config.settings import Settings, get_settings
-from solvemycase.data.ingestion.schema import DualOutputResponse, ExecutionTrace
+from solvemycase.data.ingestion.schema import (
+    DualOutputResponse,
+    ExecutionTrace,
+    stripped_unverified_citations,
+)
 
 
 def log_inference_event(
@@ -32,10 +36,9 @@ def log_inference_event(
     """
     cfg = settings or get_settings()
     target = log_path or path or cfg.resolve_path(cfg.telemetry_log_path)
-    stripped_real = [
-        item for item in response.unverified_citations_stripped if not item.startswith("Clarification: ")
-    ]
-    top_score = round(float(trace.retrieved_contexts[0].score), 4) if trace.retrieved_contexts else 0.0
+    stripped_real = stripped_unverified_citations(response)
+    ranked_contexts = getattr(trace, "candidate_contexts", None) or trace.retrieved_contexts
+    top_score = round(float(ranked_contexts[0].score), 4) if ranked_contexts else 0.0
     if latency_ms is not None and latency_seconds is None:
         latency_seconds = float(latency_ms) / 1000.0
     elif latency_seconds is not None and latency_ms is None:
@@ -52,6 +55,9 @@ def log_inference_event(
         "is_legal": "handle_rejection" not in trace.nodes_visited,
         "criminal_route_triggered": trace.criminal_route_triggered,
         "retrieval_gate_triggered": trace.retrieval_gate_triggered,
+        "coverage_gap": bool(getattr(trace, "coverage_gap", False)),
+        "coverage_gap_reason": getattr(trace, "coverage_gap_reason", None),
+        "applicability_mode": getattr(trace, "applicability_mode", None),
         "top_retrieval_score": top_score,
         "verified_citations": len(response.statutory_citations) + len(response.precedent_citations),
         "stripped_citations": len(stripped_real),

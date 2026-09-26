@@ -1,11 +1,13 @@
-"""Generates 50+ diverse and realistic legal scenarios for the benchmark suite.
+"""Generates 61 diverse and realistic legal scenarios for the benchmark suite.
 
 Includes:
 - Motor Vehicle Accidents & Negligence (15 scenarios)
 - Property Conflicts & Injunctions (15 scenarios)
 - Consumer Rights & Deficiency in Service (15 scenarios)
 - Out-of-Scope & Adversarial Guardrail Prompts (7 scenarios)
-Total: 52 benchmark scenarios with gold-standard metadata.
+- General Criminal Disputes: Animal Cruelty (1 scenario)
+- Uncovered Legal Queries for Abstention Testing (8 scenarios)
+Total: 61 benchmark scenarios with gold-standard metadata.
 """
 
 import json
@@ -23,7 +25,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["134", "166", "161", "106", "281"],
+        "expected_sections": ["134", "166", "161", "BNS 281"],
         "expected_forum": ["MACT", "Claims Tribunal", "Police Station"],
         "critical_steps": ["FIR", "Medical records", "MACT claim petition"],
     },
@@ -53,7 +55,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["166", "281"],
+        "expected_sections": ["166", "BNS 281"],
         "expected_forum": ["MACT", "Claims Tribunal"],
         "critical_steps": ["FIR under BNS 281", "Disability certificate", "Section 166 claim"],
     },
@@ -63,7 +65,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["166", "106"],
+        "expected_sections": ["166", "BNS 106"],
         "expected_forum": ["MACT", "Motor Accident Claims Tribunal"],
         "critical_steps": ["FIR", "Sarla Verma multiplier calculation", "MACT petition"],
     },
@@ -83,7 +85,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["166", "106"],
+        "expected_sections": ["166", "BNS 281"],
         "expected_forum": ["MACT", "Claims Tribunal"],
         "critical_steps": ["Medical board disability certificate", "Income tax returns proof", "Section 166 petition"],
     },
@@ -93,7 +95,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["185", "166", "281"],
+        "expected_sections": ["185", "166", "BNS 281"],
         "expected_forum": ["Magistrate Court", "MACT"],
         "critical_steps": ["Breathalyzer record", "FIR copy", "MACT claim against driver and insurer"],
     },
@@ -143,7 +145,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["166", "281", "106"],
+        "expected_sections": ["166", "BNS 281"],
         "expected_forum": ["MACT", "Magistrate Court"],
         "critical_steps": ["FIR against school management and driver", "Motor vehicle inspection report", "MACT claim"],
     },
@@ -163,7 +165,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "motor_vehicle_accident",
         "is_legal": True,
         "expected_act": "Motor Vehicles Act, 1988",
-        "expected_sections": ["147", "149", "166"],
+        "expected_sections": ["147", "150", "166"],
         "expected_forum": ["MACT", "High Court"],
         "critical_steps": ["Policy terms review", "Pay and Recover doctrine submission", "MACT claim against owner"],
     },
@@ -177,7 +179,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "property_conflict",
         "is_legal": True,
         "expected_act": "Transfer of Property Act, 1882",
-        "expected_sections": ["54", "53A", "6"],
+        "expected_sections": ["54", "53A", "SRA 6"],
         "expected_forum": ["Civil Court", "District Court"],
         "critical_steps": ["Legal notice", "Suit for declaration and possession", "Section 53A part performance defence"],
     },
@@ -199,7 +201,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "expected_act": "Specific Relief Act, 1963",
         "expected_sections": ["38", "39"],
         "expected_forum": ["Civil Court"],
-        "critical_steps": ["Site photographs", "Municipal stop-work complaint", "Suit for permanent & mandatory injunction"],
+        "critical_steps": ["Site photographs", "Municipal stop-work complaint", "Suit for permanent & mandatory injunctions"],
     },
     {
         "id": "prop_004",
@@ -237,7 +239,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "property_conflict",
         "is_legal": True,
         "expected_act": "Specific Relief Act, 1963",
-        "expected_sections": ["6", "106"],
+        "expected_sections": ["6", "TPA 106"],
         "expected_forum": ["Civil Court", "Police Station"],
         "critical_steps": ["Police complaint for illegal lock-out", "Summary suit under Section 6 SRA", "Inventory commissioner application"],
     },
@@ -287,7 +289,7 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "domain": "property_conflict",
         "is_legal": True,
         "expected_act": "Transfer of Property Act, 1882",
-        "expected_sections": ["55", "318"],
+        "expected_sections": ["55", "BNS 318"],
         "expected_forum": ["Civil Court", "Police Station / DRT"],
         "critical_steps": ["Search report of encumbrance", "Criminal complaint for cheating", "Suit for recovery of earnest money with interest"],
     },
@@ -549,6 +551,122 @@ BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
         "expected_forum": [],
         "critical_steps": [],
     },
+
+    # ----------------------------------------------------
+    # Category 5: Covered General Dispute — Animal Cruelty (1 scenario)
+    # ----------------------------------------------------
+    {
+        "id": "gen_001",
+        "scenario": "A watchman in our housing society beat and killed my pet cat with a stick yesterday. What legal action can I take against him?",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "covered",
+        "expected_act": "Bharatiya Nyaya Sanhita, 2023",
+        "expected_sections": ["325", "PCA 11"],
+        "acceptable_acts": ["BNS 325", "PCA 11", "BNSS", "CrPC"],
+        "expected_forum": ["Police Station", "Magistrate"],
+        "critical_steps": ["FIR", "Post-mortem", "Veterinary"],
+    },
+
+    # ----------------------------------------------------
+    # Category 6: Legal Questions Outside Corpus Coverage (8 scenarios)
+    # ----------------------------------------------------
+    {
+        "id": "uncov_001",
+        "scenario": "My husband and in-laws have been harassing me continuously for Rs. 15 lakhs in dowry and threatened to throw me out of the matrimonial home. What legal steps can I take?",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["BNSS", "CrPC", "DPA", "PWDVA"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_002",
+        "scenario": "My private software employer in Hyderabad has not paid my monthly salary for the last four months despite my completing notice period formalities.",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["PWA", "COW", "IDA", "IRC", "SEA"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_003",
+        "scenario": "A fraudster tricked me into sharing a screen-mirroring app and drained Rs. 1,40,000 from my savings account through three unauthorized UPI transfers.",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["BNSS", "CrPC", "BNS 318", "ITA", "BANKING"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_004",
+        "scenario": "My spouse deserted me two years ago and refuses to pay monthly maintenance for me and our six-year-old child. How do I file for divorce and maintenance?",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["HMA", "HAMA", "SMA", "PLAW", "FCA", "GWA", "BNSS", "CrPC"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_005",
+        "scenario": "A former business partner posted false allegations on social media accusing me of embezzlement, damaging my professional reputation among clients.",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["BNSS", "CrPC", "ITA"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_006",
+        "scenario": "My neighbour lets his aggressive pet dog roam unleashed in the corridor and it bit my ten-year-old daughter on the leg, requiring anti-rabies vaccinations.",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["BNSS", "CrPC"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_007",
+        "scenario": "A wholesale distributor issued a post-dated cheque of Rs. 4,50,000 towards goods supplied, and the cheque was dishonoured by the bank with the memo 'Insufficient Funds'.",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["NIA", "BNSS", "CrPC"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
+    {
+        "id": "uncov_008",
+        "scenario": "My previous employer deducted Employee Provident Fund (EPF) contributions from my payslips for 18 months but never deposited the amount with EPFO.",
+        "domain": "general_dispute",
+        "is_legal": True,
+        "coverage": "uncovered",
+        "expected_act": None,
+        "expected_sections": [],
+        "acceptable_acts": ["EPFA", "CSS", "PWA", "COW", "BNSS", "CrPC", "BNS 316"],
+        "expected_forum": [],
+        "critical_steps": [],
+    },
 ]
 
 
@@ -561,8 +679,18 @@ def _compute_expects_criminal_route(item: Dict[str, Any]) -> bool:
     return should_trigger_criminal_route(item.get("domain", ""), str(item.get("scenario", "")))
 
 
-for _item in BENCHMARK_SCENARIOS:
-    _item.setdefault("expects_criminal_route", _compute_expects_criminal_route(_item))
+def _populate_scenario_defaults() -> None:
+    """Fill default coverage, acceptable_acts, and expects_criminal_route on every benchmark item."""
+    from solvemycase.evaluation.metrics import default_acceptable_acts
+
+    for item in BENCHMARK_SCENARIOS:
+        item.setdefault("coverage", "covered")
+        if "acceptable_acts" not in item:
+            item["acceptable_acts"] = default_acceptable_acts(item)
+        item.setdefault("expects_criminal_route", _compute_expects_criminal_route(item))
+
+
+_populate_scenario_defaults()
 
 
 def generate_benchmark_file(output_path: Path) -> int:

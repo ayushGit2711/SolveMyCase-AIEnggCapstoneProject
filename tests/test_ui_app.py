@@ -96,7 +96,9 @@ def _all_text(at: AppTest) -> str:
 def test_entrypoint_renders_default_get_help_page():
     at = AppTest.from_file(APP_FILE, default_timeout=TIMEOUT_SECONDS).run()
     assert not at.exception
-    assert at.title[0].value == "Get a step-by-step legal action plan"
+    assert at.title[0].value == "⚖️ SOLVE MY CASE"
+    assert at.header[0].value == "Get a step-by-step legal action plan"
+    assert any(c.value.startswith("**What we cover:** Our database currently holds") for c in at.caption)
     assert any("Offline mode" in w.value for w in at.sidebar.warning)
 
 
@@ -251,3 +253,43 @@ def test_every_graph_node_has_a_progress_message():
     nodes = set(get_engines().proposed.graph.get_graph().nodes) - {"__start__", "__end__"}
     assert nodes
     assert nodes <= set(NODE_MESSAGES)
+
+
+def test_coverage_gap_answer_shows_note_and_cites_nothing():
+    def page():
+        from solvemycase.core.proposed.coverage import build_coverage_gap_response
+        from solvemycase.data.ingestion.schema import LegalDomain
+        from solvemycase.ui.components.result import render_full_result
+
+        response = build_coverage_gap_response(
+            "My employer has not paid my salary for three months.",
+            LegalDomain.GENERAL_DISPUTE,
+            "Our database currently holds selected sections of these laws: consumer complaints (Consumer Protection Act, 2019). <b>x</b>",
+        )
+        render_full_result("My employer has not paid my salary for three months.", response, key_prefix="gap")
+
+    at = AppTest.from_function(page, default_timeout=TIMEOUT_SECONDS).run()
+    assert not at.exception
+
+    infos = [i.value for i in at.info]
+    assert infos[0].startswith("**About our coverage:** Our database doesn't cover the law for this situation yet")
+    assert "\\<b\\>" in infos[0], "the coverage note is escaped before rendering"
+    assert any("No law or judgment in our database applies to these facts" in i for i in infos)
+    assert {m.label: m.value for m in at.metric}["Verified laws & judgments"] == "0"
+    assert "Step 3:" in _all_text(at)
+    assert "none is cited" in _all_text(at)
+    assert not at.get("link_button"), "a coverage-gap answer links to no law"
+
+
+def test_export_includes_coverage_note():
+    from solvemycase.core.proposed.coverage import build_coverage_gap_response
+    from solvemycase.data.ingestion.schema import LegalDomain
+    from solvemycase.ui.components.export import response_to_markdown
+
+    response = build_coverage_gap_response("Unpaid salary.", LegalDomain.GENERAL_DISPUTE, "Our database holds A.")
+    md = response_to_markdown("Unpaid salary.", response)
+
+    assert md.startswith("# SOLVE MY CASE — Legal Action Plan")
+    assert md.index("## About our coverage") < md.index("## Action plan")
+    assert "Our database holds A." in md
+    assert "## Verified laws" not in md and "## Verified court judgments" not in md

@@ -16,7 +16,7 @@ from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.proposed.graph import LegalAgentGraph
 from solvemycase.data.ingestion.schema import DocumentType
-from solvemycase.data.vectorstore.indexer import EmbeddingProvider, run_indexing_pipeline
+from solvemycase.data.vectorstore.indexer import EmbeddingProvider, ensure_index_current
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 
 EVALUATION_DIR = Path(__file__).resolve().parent.parent / "evaluation"
@@ -33,12 +33,15 @@ class Engines(NamedTuple):
 
 @st.cache_resource(show_spinner="Loading legal corpus and models...")
 def get_engines() -> Engines:
-    """Create (once per process) the vector store, embedder, and both pipelines."""
+    """Create (once per process) the vector store, embedder, and both pipelines.
+
+    The store is re-indexed when it is empty or when its corpus fingerprint / embedding model no longer
+    matches the corpus shipped with the code, so a redeployed app never serves stale law text or links.
+    """
     settings = get_settings()
     store = QdrantLegalStore(settings=settings)
-    if len(store.corpus_documents) < 40:
-        run_indexing_pipeline(store=store, download_corpus=False, force_reset=True)
     embedder = EmbeddingProvider(settings=settings)
+    ensure_index_current(store, settings=settings, embedder=embedder)
     return Engines(
         settings=settings,
         store=store,

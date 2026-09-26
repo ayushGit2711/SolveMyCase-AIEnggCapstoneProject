@@ -15,12 +15,15 @@ digraph G {
     d [label="2. Query expansion\\n(statute + precedent sub-queries)"];
     h [label="3a. Hybrid search\\n(dense + BM25, RRF)"];
     c [label="3b. Criminal-code search\\n(BNS / BNSS / IPC / CrPC)"];
-    x [label="3c. Cross-encoder reranking"];
-    p [label="4. Procedural planner\\n(6-phase action plan)"];
-    v [label="5. Citation verification\\n(match or re-ground, else remove)"];
+    x [label="3c. Cross-encoder reranking\\n(best match over all sub-queries)"];
+    a [label="4. Applicability check\\n(keep only laws that apply to the facts)"];
+    n [label="Honest coverage note +\\nsafe general steps (no citations)", fillcolor="#FEF3C7", color="#D97706"];
+    p [label="5. Procedural planner\\n(6-phase action plan)"];
+    v [label="6. Citation verification\\n(match retrieved text, else remove)"];
     o [label="Verified action plan +\\nlaws & judgments", fillcolor="#DCFCE7", color="#16A34A"];
     q -> g; g -> r [label="out of scope"]; g -> d [label="legal"];
-    d -> h; d -> c; h -> x; c -> x; x -> p; p -> v; v -> o;
+    d -> h; d -> c; h -> x; c -> x; x -> a;
+    a -> n [label="nothing applies"]; a -> p [label="law applies"]; p -> v; v -> o;
 }
 """
 
@@ -30,7 +33,7 @@ def render() -> None:
     engines = get_engines()
     settings = engines.settings
 
-    st.title("How it works")
+    st.header("How it works")
     st.graphviz_chart(ARCHITECTURE_DOT, width="stretch")
 
     st.subheader("Legal corpus (live)")
@@ -42,6 +45,7 @@ def render() -> None:
     if stats["total_documents"] == 0:
         st.warning("The index is empty. Run `python -m solvemycase.data.vectorstore.indexer`.")
     else:
+        st.caption(escape_markdown(engines.proposed.coverage_summary()))
         left, right = st.columns(2)
         with left:
             st.markdown("##### Sections per Act")
@@ -57,6 +61,12 @@ def render() -> None:
 
     st.subheader("Engine settings")
     qdrant_mode = "Remote Qdrant" if settings.qdrant_url else f"Embedded Qdrant ({settings.qdrant_path})"
+    if not settings.applicability_check_enabled:
+        applicability = "Disabled"
+    elif is_llm_mode(settings):
+        applicability = f"{settings.openai_model_fast}, top {settings.applicability_candidate_k} candidates"
+    else:
+        applicability = "Skipped offline (top reranked candidates pass through)"
     st.dataframe(
         [
             {"Setting": "Mode", "Value": "OpenAI" if is_llm_mode(settings) else "Offline fallbacks (no API key)"},
@@ -66,6 +76,7 @@ def render() -> None:
             {"Setting": "Vector store", "Value": qdrant_mode},
             {"Setting": "Candidates retrieved / kept after rerank", "Value": f"{settings.max_retrieved_chunks} / {settings.rerank_top_k}"},
             {"Setting": "Cross-encoder", "Value": settings.cross_encoder_model},
+            {"Setting": "Applicability check", "Value": applicability},
         ],
         hide_index=True,
         width="stretch",

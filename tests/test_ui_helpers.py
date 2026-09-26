@@ -191,3 +191,18 @@ def test_response_to_markdown_includes_working_links():
     assert "[Indian Kanoon](https://indiankanoon.org/doc/136948773/)" in md
     assert "[India Code](https://indiacode.gov.in/handle/123456789/523268)" in md
     assert "[Read judgment](https://indiankanoon.org/doc/837924/)" in md
+
+
+def test_phase_b_statute_and_precedent_links():
+    from solvemycase.ui.components.formatting import official_statute_url
+
+    assert statute_search_url("Bharatiya Nyaya Sanhita, 2023", "325") == "https://indiankanoon.org/doc/186696080/"
+    assert official_statute_url("Bharatiya Nyaya Sanhita, 2023", "325") == "https://indiacode.gov.in/handle/123456789/545816"
+    assert statute_search_url("Prevention of Cruelty to Animals Act, 1960", "11") == "https://indiankanoon.org/doc/1763700/"
+    assert official_statute_url("Prevention of Cruelty to Animals Act, 1960", "11") == "https://indiacode.gov.in/handle/123456789/532762"
+    assert statute_search_url("Bharatiya Nyaya Sanhita, 2023", "190") == "https://indiankanoon.org/doc/53218156/"
+    assert statute_search_url("Bharatiya Nyaya Sanhita, 2023", "191") == "https://indiankanoon.org/doc/175201984/"
+    assert statute_search_url("Motor Vehicles Act, 1988", "147") == "https://indiankanoon.org/doc/87183818/"
+    assert statute_search_url("Motor Vehicles Act, 1988", "150") == "https://indiankanoon.org/doc/185690380/"
+    assert precedent_read_url(None, "Animal Welfare Board of India v. A. Nagaraja & Ors.") == "https://indiankanoon.org/doc/39696860/"
+    assert precedent_read_url(None, "M. Nagarajan v. State") != "https://indiankanoon.org/doc/39696860/"

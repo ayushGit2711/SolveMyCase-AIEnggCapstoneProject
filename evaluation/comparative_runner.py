@@ -1,7 +1,8 @@
 """Comparative benchmark runner for Approach A (Vanilla RAG) vs Approach B (Proposed LangGraph).
 
-Executes the 52 benchmark scenarios across both pipelines using `run_with_trace()`, collecting:
+Executes the 61 benchmark scenarios across both pipelines using `run_with_trace()`, collecting:
 - Post-output citation grounding accuracy & hallucination rate (symmetric across A & B) + pre-verification strip rate.
+- Irrelevant-citation rate, uncovered-topic honesty rate, and false coverage-gap rate.
 - Retrieval IR metrics: Section Recall@K, Precision@K, MRR, Context Relevance.
 - Ground-truth alignment: Expected Section Recall, Forum Accuracy, Critical Steps Recall.
 - Agentic control-flow & guardrail metrics: Trajectory Validity, Criminal Routing Accuracy, Guardrail TNR/FPR, Task Success.
@@ -18,7 +19,8 @@ import numpy as np
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.baseline.vanilla_rag import VanillaRAGBaseline
 from solvemycase.core.proposed.graph import LegalAgentGraph
-from solvemycase.data.vectorstore.indexer import EmbeddingProvider
+from solvemycase.data.ingestion.schema import stripped_unverified_citations
+from solvemycase.data.vectorstore.indexer import EmbeddingProvider, ensure_index_current
 from solvemycase.data.vectorstore.qdrant_store import QdrantLegalStore
 from solvemycase.evaluation.llm_judge import LegalLLMJudge
 from solvemycase.evaluation.metrics import (
@@ -26,8 +28,10 @@ from solvemycase.evaluation.metrics import (
     compute_citation_grounding_metrics,
     compute_context_relevance,
     compute_ground_truth_alignment,
+    compute_irrelevant_citation_rate,
     compute_procedural_completeness,
     compute_retrieval_metrics,
+    is_uncovered_scenario,
     verify_target_forum,
 )
 
@@ -35,11 +39,17 @@ from solvemycase.evaluation.metrics import (
 class ComparativeRunner:
     """Executes comparative evaluation across Baseline and Proposed legal pipelines."""
 
-    def __init__(self, settings: Optional[Settings] = None, judge_samples: Optional[int] = None):
+    def __init__(
+        self,
+        settings: Optional[Settings] = None,
+        judge_samples: Optional[int] = None,
+        store: Optional[QdrantLegalStore] = None,
+    ):
         self.settings = settings or get_settings()
         self.judge_samples = judge_samples or self.settings.eval_judge_samples
-        self.store = QdrantLegalStore(settings=self.settings)
+        self.store = store or QdrantLegalStore(settings=self.settings)
         self.embedder = EmbeddingProvider(settings=self.settings)
+        ensure_index_current(self.store, settings=self.settings, embedder=self.embedder)
         self.baseline = VanillaRAGBaseline(settings=self.settings, store=self.store, embedder=self.embedder)
         self.proposed = LegalAgentGraph(settings=self.settings, store=self.store, embedder=self.embedder)
         self.judge = LegalLLMJudge(settings=self.settings)
@@ -65,6 +75,8 @@ class ComparativeRunner:
         scenario_text = item["scenario"]
         expected_meta = item
         is_legal = bool(item.get("is_legal", True))
+        uncovered = is_uncovered_scenario(expected_meta)
+        corpus_docs = getattr(self.store, "corpus_documents", None)
 
         # 1. Run Baseline (Approach A)
         t0 = time.perf_counter()
@@ -76,6 +88,7 @@ class ComparativeRunner:
             retrieved_contexts=b_trace.retrieved_contexts,
             store=self.store,
             is_legal=is_legal,
+            abstention_ok=uncovered,
         )
         b_procedural = compute_procedural_completeness(baseline_resp)
         b_forum = verify_target_forum(baseline_resp, expected_meta.get("expected_forum", []), is_legal=is_legal)
@@ -84,7 +97,8 @@ class ComparativeRunner:
         )
         b_ctx_rel = compute_context_relevance(scenario_text, b_trace.retrieved_contexts, expected_meta)
         b_align = compute_ground_truth_alignment(expected_meta, baseline_resp)
-        b_agent = compute_agent_trace_metrics(b_trace, expected_meta, baseline_resp)
+        b_irr = compute_irrelevant_citation_rate(baseline_resp, expected_meta, corpus_docs)
+        b_agent = compute_agent_trace_metrics(b_trace, expected_meta, baseline_resp, corpus_docs)
         b_judge = self.judge.judge_response(
             scenario_text,
             expected_meta,
@@ -99,20 +113,23 @@ class ComparativeRunner:
         proposed_resp, p_trace = self.proposed.run_with_trace(scenario_text)
         t_proposed = time.perf_counter() - t0
 
+        p_ir_contexts = getattr(p_trace, "candidate_contexts", None) or p_trace.retrieved_contexts
         p_grounding = compute_citation_grounding_metrics(
             proposed_resp,
             retrieved_contexts=p_trace.retrieved_contexts,
             store=self.store,
             is_legal=is_legal,
+            abstention_ok=uncovered,
         )
         p_procedural = compute_procedural_completeness(proposed_resp)
         p_forum = verify_target_forum(proposed_resp, expected_meta.get("expected_forum", []), is_legal=is_legal)
         p_retrieval = compute_retrieval_metrics(
-            p_trace.retrieved_contexts, expected_meta, k=self.settings.rerank_top_k
+            p_ir_contexts, expected_meta, k=self.settings.rerank_top_k
         )
-        p_ctx_rel = compute_context_relevance(scenario_text, p_trace.retrieved_contexts, expected_meta)
+        p_ctx_rel = compute_context_relevance(scenario_text, p_ir_contexts, expected_meta)
         p_align = compute_ground_truth_alignment(expected_meta, proposed_resp)
-        p_agent = compute_agent_trace_metrics(p_trace, expected_meta, proposed_resp)
+        p_irr = compute_irrelevant_citation_rate(proposed_resp, expected_meta, corpus_docs)
+        p_agent = compute_agent_trace_metrics(p_trace, expected_meta, proposed_resp, corpus_docs)
         p_judge = self.judge.judge_response(
             scenario_text,
             expected_meta,
@@ -122,19 +139,21 @@ class ComparativeRunner:
             num_samples=self.judge_samples,
         )
 
-        real_stripped = [
-            s for s in proposed_resp.unverified_citations_stripped if not s.startswith("Clarification:")
-        ]
+        real_stripped = stripped_unverified_citations(proposed_resp)
 
         return {
             "scenario_id": item["id"],
             "domain": item["domain"],
             "is_legal": is_legal,
+            "coverage": item.get("coverage", "covered"),
             "baseline": {
                 "latency_seconds": round(t_baseline, 4),
                 "hallucination_rate": b_grounding["hallucination_rate"],
                 "grounding_accuracy": b_grounding["grounding_accuracy"],
                 "pre_verification_strip_rate": b_grounding["pre_verification_strip_rate"],
+                "irrelevant_citation_rate": b_irr,
+                "coverage_gap": b_agent["coverage_gap"],
+                "applicability_mode": getattr(b_trace, "applicability_mode", None),
                 "completeness_score": b_procedural["completeness_score"],
                 "step_count": b_procedural["step_count"],
                 "forum_matched": b_forum,
@@ -162,6 +181,9 @@ class ComparativeRunner:
                 "hallucination_rate": p_grounding["hallucination_rate"],
                 "grounding_accuracy": p_grounding["grounding_accuracy"],
                 "pre_verification_strip_rate": p_grounding["pre_verification_strip_rate"],
+                "irrelevant_citation_rate": p_irr,
+                "coverage_gap": p_agent["coverage_gap"],
+                "applicability_mode": getattr(p_trace, "applicability_mode", None),
                 "completeness_score": p_procedural["completeness_score"],
                 "step_count": p_procedural["step_count"],
                 "forum_matched": p_forum,
@@ -243,41 +265,104 @@ class ComparativeRunner:
 
         return {"summary": summary, "results": results}
 
-    def _compute_side_summary(self, results: List[Dict[str, Any]], key: str) -> Dict[str, Any]:
-        """Compute aggregate statistics for either 'baseline' or 'proposed'."""
+    @staticmethod
+    def _compute_side_summary(results: List[Dict[str, Any]], key: str) -> Dict[str, Any]:
+        """Compute aggregate statistics for either 'baseline' or 'proposed'.
+
+        Standard covered/non-legal metrics are averaged over the covered + non-legal population so they remain
+        comparable across corpus-coverage Stress tests, while `avg_irrelevant_citation_rate`,
+        `uncovered_honesty_rate`, and `false_gap_rate` measure citation relevance and coverage-gap honesty.
+        """
+        all_rows = [r[key] for r in results]
         legal_rows = [r[key] for r in results if r.get("is_legal", True)]
         non_legal_rows = [r[key] for r in results if not r.get("is_legal", True)]
-        all_rows = [r[key] for r in results]
+        covered_legal_rows = [
+            r[key]
+            for r in results
+            if r.get("is_legal", True) and str(r.get("coverage", "covered")).lower() != "uncovered"
+        ]
+        uncovered_rows = [
+            r[key]
+            for r in results
+            if r.get("is_legal", True) and str(r.get("coverage", "covered")).lower() == "uncovered"
+        ]
+        base_pop_rows = [
+            r[key]
+            for r in results
+            if str(r.get("coverage", "covered")).lower() != "uncovered"
+        ] or all_rows
+        covered_or_legal_rows = covered_legal_rows or legal_rows or all_rows
 
         def _mean(vals: List[float], scale: float = 1.0, digits: int = 2) -> float:
             if not vals:
                 return 0.0
             return round(float(np.mean(vals)) * scale, digits)
 
+        uncovered_honest_flags = [
+            1.0
+            if (
+                r.get("irrelevant_citation_rate", 0.0) == 0.0
+                and r.get("step_count", 0) >= 3
+                and r.get("guardrail_fpr", 0.0) == 0.0
+            )
+            else 0.0
+            for r in uncovered_rows
+        ]
+        false_gap_flags = [1.0 if bool(r.get("coverage_gap", False)) else 0.0 for r in covered_legal_rows]
+
         return {
             "avg_latency_seconds": _mean([r["latency_seconds"] for r in all_rows], 1.0, 3),
-            "avg_hallucination_rate": _mean([r["hallucination_rate"] for r in all_rows], 100.0, 2),
-            "avg_grounding_accuracy": _mean([r["grounding_accuracy"] for r in all_rows], 100.0, 2),
-            "avg_pre_verification_strip_rate": _mean([r.get("pre_verification_strip_rate", 0.0) for r in all_rows], 100.0, 2),
-            "avg_completeness_score": _mean([r["completeness_score"] for r in legal_rows or all_rows], 1.0, 3),
-            "forum_accuracy": _mean([1.0 if r["forum_matched"] else 0.0 for r in all_rows], 100.0, 2),
-            "avg_section_recall_at_k": _mean([r.get("section_recall_at_k", 0.0) for r in legal_rows or all_rows], 100.0, 2),
-            "avg_precision_at_k": _mean([r.get("precision_at_k", 0.0) for r in legal_rows or all_rows], 100.0, 2),
-            "avg_mrr": _mean([r.get("mrr", 0.0) for r in legal_rows or all_rows], 1.0, 3),
-            "avg_context_relevance": _mean([r.get("context_relevance", 0.0) for r in legal_rows or all_rows], 100.0, 2),
-            "avg_expected_section_recall": _mean([r.get("expected_section_recall", 0.0) for r in all_rows], 100.0, 2),
-            "avg_critical_steps_recall": _mean([r.get("critical_steps_recall", 0.0) for r in all_rows], 100.0, 2),
-            "trajectory_accuracy": _mean([1.0 if r.get("trajectory_valid", False) else 0.0 for r in all_rows], 100.0, 2),
-            "criminal_routing_accuracy": _mean([1.0 if r.get("criminal_routing_correct", False) else 0.0 for r in all_rows], 100.0, 2),
-            "guardrail_tnr": _mean([r.get("guardrail_tnr", 0.0) for r in non_legal_rows], 100.0, 2) if non_legal_rows else 100.0,
-            "guardrail_fpr": _mean([r.get("guardrail_fpr", 0.0) for r in legal_rows], 100.0, 2) if legal_rows else 0.0,
+            "avg_hallucination_rate": _mean([r["hallucination_rate"] for r in base_pop_rows], 100.0, 2),
+            "avg_grounding_accuracy": _mean([r["grounding_accuracy"] for r in base_pop_rows], 100.0, 2),
+            "avg_pre_verification_strip_rate": _mean(
+                [r.get("pre_verification_strip_rate", 0.0) for r in base_pop_rows], 100.0, 2
+            ),
+            "avg_irrelevant_citation_rate": _mean(
+                [r.get("irrelevant_citation_rate", 0.0) for r in (legal_rows or all_rows)], 100.0, 2
+            ),
+            "uncovered_honesty_rate": _mean(uncovered_honest_flags, 100.0, 2) if uncovered_rows else 100.0,
+            "false_gap_rate": _mean(false_gap_flags, 100.0, 2) if covered_legal_rows else 0.0,
+            "avg_completeness_score": _mean([r["completeness_score"] for r in covered_or_legal_rows], 1.0, 3),
+            "forum_accuracy": _mean([1.0 if r["forum_matched"] else 0.0 for r in base_pop_rows], 100.0, 2),
+            "avg_section_recall_at_k": _mean(
+                [r.get("section_recall_at_k", 0.0) for r in covered_or_legal_rows], 100.0, 2
+            ),
+            "avg_precision_at_k": _mean(
+                [r.get("precision_at_k", 0.0) for r in covered_or_legal_rows], 100.0, 2
+            ),
+            "avg_mrr": _mean([r.get("mrr", 0.0) for r in covered_or_legal_rows], 1.0, 3),
+            "avg_context_relevance": _mean(
+                [r.get("context_relevance", 0.0) for r in covered_or_legal_rows], 100.0, 2
+            ),
+            "avg_expected_section_recall": _mean(
+                [r.get("expected_section_recall", 0.0) for r in base_pop_rows], 100.0, 2
+            ),
+            "avg_critical_steps_recall": _mean(
+                [r.get("critical_steps_recall", 0.0) for r in base_pop_rows], 100.0, 2
+            ),
+            "trajectory_accuracy": _mean(
+                [1.0 if r.get("trajectory_valid", False) else 0.0 for r in all_rows], 100.0, 2
+            ),
+            "criminal_routing_accuracy": _mean(
+                [1.0 if r.get("criminal_routing_correct", False) else 0.0 for r in all_rows], 100.0, 2
+            ),
+            "guardrail_tnr": _mean([r.get("guardrail_tnr", 0.0) for r in non_legal_rows], 100.0, 2)
+            if non_legal_rows
+            else 100.0,
+            "guardrail_fpr": _mean([r.get("guardrail_fpr", 0.0) for r in legal_rows], 100.0, 2)
+            if legal_rows
+            else 0.0,
             "task_success_rate": _mean([1.0 if r.get("task_success", False) else 0.0 for r in all_rows], 100.0, 2),
             "avg_judge_score": _mean([r["judge_score"] for r in all_rows], 1.0, 2),
             "avg_statutory_accuracy": _mean([r.get("statutory_accuracy", 0.0) for r in all_rows], 1.0, 2),
-            "avg_procedural_actionability": _mean([r.get("procedural_actionability", 0.0) for r in all_rows], 1.0, 2),
+            "avg_procedural_actionability": _mean(
+                [r.get("procedural_actionability", 0.0) for r in all_rows], 1.0, 2
+            ),
             "avg_forum_appropriateness": _mean([r.get("forum_appropriateness", 0.0) for r in all_rows], 1.0, 2),
             "avg_hallucination_freedom": _mean([r.get("hallucination_freedom", 0.0) for r in all_rows], 1.0, 2),
-            "avg_coherence_and_specificity": _mean([r.get("coherence_and_specificity", 0.0) for r in all_rows], 1.0, 2),
+            "avg_coherence_and_specificity": _mean(
+                [r.get("coherence_and_specificity", 0.0) for r in all_rows], 1.0, 2
+            ),
         }
 
     def _compute_aggregate_summary(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -303,6 +388,9 @@ class ComparativeRunner:
         print(f"{'Post-Output Hallucination Rate':<38} | {b['avg_hallucination_rate']:>18.1f}% | {p['avg_hallucination_rate']:>18.1f}%")
         print(f"{'Citation Grounding Accuracy':<38} | {b['avg_grounding_accuracy']:>18.1f}% | {p['avg_grounding_accuracy']:>18.1f}%")
         print(f"{'Pre-Verification Strip Rate':<38} | {b['avg_pre_verification_strip_rate']:>18.1f}% | {p['avg_pre_verification_strip_rate']:>18.1f}%")
+        print(f"{'Irrelevant Citation Rate':<38} | {b['avg_irrelevant_citation_rate']:>18.1f}% | {p['avg_irrelevant_citation_rate']:>18.1f}%")
+        print(f"{'Uncovered-Topic Honesty Rate':<38} | {b['uncovered_honesty_rate']:>18.1f}% | {p['uncovered_honesty_rate']:>18.1f}%")
+        print(f"{'False Coverage-Gap Rate':<38} | {b['false_gap_rate']:>18.1f}% | {p['false_gap_rate']:>18.1f}%")
         print(f"{'Retrieval Section Recall@K':<38} | {b['avg_section_recall_at_k']:>18.1f}% | {p['avg_section_recall_at_k']:>18.1f}%")
         print(f"{'Retrieval Mean Reciprocal Rank (MRR)':<38} | {b['avg_mrr']:>19.2f} | {p['avg_mrr']:>19.2f}")
         print(f"{'Expected Section Recall (Final)':<38} | {b['avg_expected_section_recall']:>18.1f}% | {p['avg_expected_section_recall']:>18.1f}%")

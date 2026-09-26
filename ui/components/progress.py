@@ -11,9 +11,10 @@ from solvemycase.data.ingestion.schema import DualOutputResponse
 NODE_MESSAGES: Dict[str, str] = {
     "guardrail": "Understood your question and identified the type of case",
     "decontextualize": "Worked out which laws and judgments to look for",
-    "retrieve_and_rerank": "Found the most relevant legal provisions",
+    "retrieve_and_rerank": "Searched our legal database",
+    "applicability_check": "Checked which laws apply to your facts",
     "procedural_planner": "Drafted your step-by-step plan",
-    "verification": "Checked every citation against official legal text",
+    "verification": "Matched every citation to official legal text in our database",
     "synthesis": "Prepared your results",
     "handle_rejection": "This doesn't look like a legal problem we can help with",
 }

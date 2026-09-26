@@ -28,19 +28,28 @@ from solvemycase.ui.components.formatting import DISCLAIMER
 from solvemycase.ui.state import compute_corpus_stats, get_engines, is_llm_mode
 from solvemycase.ui.views import benchmark, compare, get_help, how_it_works
 
+APP_TITLE = "SOLVE MY CASE"
+APP_TAGLINE = "Step-by-step action plans for everyday legal problems in India."
+
 st.set_page_config(
-    page_title="solvemycase: Indian legal action plans",
+    page_title=APP_TITLE,
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 
+def render_brand_header() -> None:
+    """Show the app title and tagline above every page."""
+    st.title(f"⚖️ {APP_TITLE}", anchor=False)
+    st.caption(APP_TAGLINE)
+
+
 def render_sidebar() -> None:
     """Show runtime mode, corpus size, and the disclaimer."""
     engines = get_engines()
     with st.sidebar:
-        st.markdown("### ⚖️ solvemycase")
+        st.markdown(f"### ⚖️ {APP_TITLE}")
         if is_llm_mode(engines.settings):
             st.success("OpenAI connected", icon="🟢")
         else:
@@ -59,5 +68,6 @@ navigation = st.navigation(
         st.Page(how_it_works.render, title="How it works", icon="ℹ️", url_path="how-it-works"),
     ]
 )
+render_brand_header()
 render_sidebar()
 navigation.run()

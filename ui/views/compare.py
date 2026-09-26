@@ -19,7 +19,12 @@ from solvemycase.ui.components.formatting import (
     verified_citation_count,
 )
 from solvemycase.ui.components.progress import run_with_progress
-from solvemycase.ui.components.result import render_rejection, render_scenario_echo, render_verification_details
+from solvemycase.ui.components.result import (
+    render_coverage_note,
+    render_rejection,
+    render_scenario_echo,
+    render_verification_details,
+)
 from solvemycase.ui.components.scenario_input import scenario_input, set_scenario_text
 from solvemycase.ui.state import get_engines, load_benchmark_dataset
 
@@ -32,8 +37,13 @@ BENCHMARK_LABEL_CHARS = 70
 
 
 def _benchmark_label(case: Dict[str, Any]) -> str:
-    """Short selectbox label: id, category (or 'Out of scope'), and the start of the scenario."""
-    category = domain_label_from_value(case.get("domain")) if case.get("is_legal", True) else "Out of scope"
+    """Short selectbox label: id, category (or 'Out of scope' / 'Outside coverage'), and the start of the scenario."""
+    if not case.get("is_legal", True):
+        category = "Out of scope"
+    elif case.get("coverage") == "uncovered":
+        category = "Outside coverage"
+    else:
+        category = domain_label_from_value(case.get("domain"))
     text = " ".join(str(case.get("scenario", "")).split())
     if len(text) > BENCHMARK_LABEL_CHARS:
         text = text[:BENCHMARK_LABEL_CHARS].rstrip() + "…"
@@ -120,12 +130,18 @@ def _render_column(title: str, caption: str, summary: Dict[str, Any], key_prefix
         render_rejection(response)
         return
     st.caption(f"{domain_label(response.domain)} · {len(response.action_plan)} steps · {summary['latency']:.1f}s")
+    render_coverage_note(response)
     with st.container(border=True):
         st.markdown("**📋 Action plan**")
         render_action_plan(response.action_plan, compact=True)
     with st.container(border=True):
         st.markdown("**📜 Citations**")
-        render_citations(response.statutory_citations, response.precedent_citations, key_prefix=f"{key_prefix}_cit")
+        render_citations(
+            response.statutory_citations,
+            response.precedent_citations,
+            key_prefix=f"{key_prefix}_cit",
+            coverage_gap=bool(response.coverage_note),
+        )
     if show_checks:
         with st.container(border=True):
             st.markdown("**🔍 Verification details**")
@@ -134,10 +150,11 @@ def _render_column(title: str, caption: str, summary: Dict[str, Any], key_prefix
 
 def render() -> None:
     """Render the comparison page."""
-    st.title("Compare Approach A vs Approach B")
+    st.header("Compare Approach A vs Approach B")
     st.markdown(
         "**A: Baseline RAG**: single dense retrieval and one prompt, no verification.  \n"
-        "**B: Proposed agent**: guardrail, query expansion, hybrid retrieval with reranking, planner, and citation verification."
+        "**B: Proposed agent**: guardrail, query expansion, hybrid retrieval with reranking, an applicability check "
+        "that keeps only laws that apply to the facts, planner, and citation verification."
     )
 
     _benchmark_picker(load_benchmark_dataset())

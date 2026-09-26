@@ -36,6 +36,7 @@ def render_citations(
     statutes: List[StatutoryCitation],
     precedents: List[PrecedentCitation],
     key_prefix: str,
+    coverage_gap: bool = False,
 ) -> None:
     """Render statutory citations and court judgments as expandable cards.
 
@@ -43,9 +44,16 @@ def render_citations(
         statutes: Verified (or baseline-proposed) statutory citations.
         precedents: Verified (or baseline-proposed) precedents.
         key_prefix: Unique prefix for widget keys (several columns may render citations).
+        coverage_gap: True when the answer carries a coverage note (no law in our database applies).
     """
     if not statutes and not precedents:
-        st.info("No citations to show for this answer.")
+        if coverage_gap:
+            st.info(
+                "No law or judgment in our database applies to these facts, so none is cited. "
+                "See the coverage note above for what our database covers."
+            )
+        else:
+            st.info("No citations to show for this answer.")
         return
 
     if statutes:

@@ -31,8 +31,19 @@ class AgentState(TypedDict):
     criminal_queries: List[str]
     retrieval_gate_triggered: bool
 
-    # Retrieved & Reranked Legal Context
+    # Legal context. Each key has exactly one writer:
+    # - candidate_contexts: reranked candidates, written only by retrieve_and_rerank;
+    # - retrieved_contexts: the candidates that apply to the facts, written only by applicability_check
+    #   (empty on a coverage gap). The planner and the verifier read only retrieved_contexts.
+    candidate_contexts: List[RetrievedContext]
     retrieved_contexts: List[RetrievedContext]
+
+    # Applicability check / coverage gap
+    coverage_gap: bool
+    coverage_gap_reason: Optional[str]
+    coverage_note: Optional[str]
+    applicability_mode: Optional[str]
+    applicability_rejected: List[str]
 
     # Draft Plan (Pre-Verification)
     draft_action_plan: List[ProceduralActionStep]

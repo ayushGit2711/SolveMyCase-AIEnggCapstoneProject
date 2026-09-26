@@ -10,9 +10,11 @@ Deconstructs legal scenarios into a chronological 6-phase dispute roadmap:
 """
 
 import json
+import logging
 from typing import Any, Dict, List, Optional
 from openai import OpenAI
 
+from solvemycase.config.openai_client import build_openai_client
 from solvemycase.config.settings import Settings, get_settings
 from solvemycase.core.proposed.state import AgentState
 from solvemycase.data.ingestion.schema import (
@@ -24,6 +26,8 @@ from solvemycase.data.ingestion.schema import (
     RetrievedContext,
     StatutoryCitation,
 )
+
+logger = logging.getLogger(__name__)
 
 PLANNER_SYSTEM_PROMPT = """You are an expert Indian Legal Procedural Engine.
 Your task is to take a citizen's dispute scenario and the retrieved primary legal authorities,
@@ -43,11 +47,22 @@ For every step, specify:
 - title (action title)
 - description (actionable practical details)
 - forum_or_authority (e.g. Police Station, MACT, District Consumer Disputes Redressal Commission, Civil Court)
-- statutory_basis (exact section if mentioned in retrieved authorities)
+- statutory_basis (exact section and Act, e.g. "Section 166, Motor Vehicles Act, 1988"; leave empty if no context section applies)
 - limitation_period (prescribed statutory time limit)
 - priority (Critical, High, Medium, Low)
 
-Also propose candidate statutory citations and case precedents derived EXCLUSIVELY from the provided context documents.
+Citation rules (strict):
+- Propose statutory citations and case precedents ONLY from the provided context documents, and ONLY when the
+  document directly applies to the facts of this scenario. Never cite a document merely because it appears in the
+  context; the context may contain loosely related material.
+- A step's statutory_basis may only reference a section (with its Act) that appears in the context. Otherwise leave
+  statutory_basis empty.
+- For events on or after 1 July 2024 prefer the Bharatiya Nyaya Sanhita (BNS), Bharatiya Nagarik Suraksha Sanhita
+  (BNSS) and Bharatiya Sakshya Adhiniyam (BSA) over the repealed IPC, CrPC and Indian Evidence Act.
+- If the context has no law for some aspect of the problem, say so plainly in that step's description (for example
+  "our database has no specific provision for this; consult a lawyer or the District Legal Services Authority")
+  instead of citing an unrelated law.
+- Precedent legal_principle must describe what the judgment actually held; do not embellish or extend it.
 
 Format strictly as JSON:
 {
@@ -91,10 +106,7 @@ class ProceduralPlannerAgent:
 
     def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or get_settings()
-        self._openai_client: Optional[OpenAI] = None
-
-        if self.settings.openai_api_key and self.settings.openai_api_key.get_secret_value():
-            self._openai_client = OpenAI(api_key=self.settings.openai_api_key.get_secret_value())
+        self._openai_client: Optional[OpenAI] = build_openai_client(self.settings)
 
     def plan(self, state: AgentState) -> Dict[str, Any]:
         """Generate draft procedural action plan and candidate citations.
@@ -138,7 +150,7 @@ class ProceduralPlannerAgent:
                     "draft_precedent_citations": precedents,
                 }
             except Exception as e:
-                print(f"[Planner] OpenAI generation failed ({e}). Using deterministic domain roadmap.")
+                logger.warning("OpenAI planner generation failed (%s); using deterministic domain roadmap.", e)
 
         return self._generate_domain_roadmap(scenario, domain, contexts)
 
@@ -331,7 +343,7 @@ class ProceduralPlannerAgent:
                         act_name=ctx.act_name or ctx.title,
                         section_number=ctx.citation_or_section.replace("Section ", ""),
                         summary_of_provision=ctx.text[:160] + "...",
-                        applicability_to_scenario="Governs the legal obligations, forum jurisdiction, and substantive remedy.",
+                        applicability_to_scenario="Retrieved as potentially related to this domain; verify applicability with a lawyer.",
                         source_url=ctx.source_url,
                         is_verified=True,
                     )

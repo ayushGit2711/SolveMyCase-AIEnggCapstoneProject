@@ -7,12 +7,15 @@ import re
 from typing import Dict, List, Optional
 from urllib.parse import quote_plus, urlparse
 
-from solvemycase.core.proposed.graph import CLARIFICATION_PREFIX, REJECTION_SUMMARY_PREFIX
 from solvemycase.data.ingestion.schema import (
+    CLARIFICATION_PREFIX,
     DualOutputResponse,
     LegalDomain,
     ProceduralActionStep,
     ProceduralPhase,
+    REJECTION_SUMMARY_PREFIX,
+    is_guardrail_rejection,
+    stripped_unverified_citations,
 )
 
 DISCLAIMER = (
@@ -119,11 +122,6 @@ def extract_deadlines(steps: List[ProceduralActionStep]) -> List[Dict[str, str]]
     ]
 
 
-def is_guardrail_rejection(response: DualOutputResponse) -> bool:
-    """True when the guardrail refused the query (no plan, rejection summary)."""
-    return not response.action_plan and response.scenario_summary.startswith(REJECTION_SUMMARY_PREFIX)
-
-
 def rejection_details(response: DualOutputResponse) -> Dict[str, str]:
     """Extract the rejection reason and clarification prompt from a guardrail response."""
     reason = response.scenario_summary[len(REJECTION_SUMMARY_PREFIX):].strip()
@@ -137,12 +135,14 @@ def rejection_details(response: DualOutputResponse) -> Dict[str, str]:
 
 def removed_references(response: DualOutputResponse) -> List[str]:
     """Citations stripped by verification (excludes guardrail clarification messages)."""
-    return [item for item in response.unverified_citations_stripped if not item.startswith(CLARIFICATION_PREFIX)]
+    return stripped_unverified_citations(response)
 
 
 _LEGACY_INDIACODE_HOSTS = {"www.indiacode.nic.in", "indiacode.nic.in", "www.indiacode.gov.in"}
 
-# Maps legacy DSpace 6 India Code handles (from indiacode.nic.in) to live DSpace 9.1 handles on indiacode.gov.in
+# Maps legacy DSpace 6 India Code handles (from indiacode.nic.in) to live DSpace 9.1 handles on indiacode.gov.in.
+# IPC 2263, CrPC 1611 and TPA 2338 are the handles the corpus used before the DSpace 9.1 migration. The IPC and
+# CrPC targets are the central records of the repealed Codes (IPC 488475; 549142 is a Chhattisgarh state copy).
 _LEGACY_INDIACODE_HANDLE_MAP = {
     "123456789/1798": "123456789/523268",
     "123456789/20062": "123456789/496548",
@@ -150,26 +150,35 @@ _LEGACY_INDIACODE_HANDLE_MAP = {
     "123456789/15256": "123456789/496115",
     "123456789/2262": "123456789/496421",
     "123456789/1579": "123456789/524827",
-    "123456789/2114": "123456789/549142",
+    "123456789/2114": "123456789/488475",
     "123456789/1978": "123456789/620185",
+    "123456789/2263": "123456789/488475",
+    "123456789/1611": "123456789/620185",
+    "123456789/2338": "123456789/496421",
 }
 
-# Verified direct Indian Kanoon statutory document URLs for all corpus provisions
+# Verified direct Indian Kanoon statutory document URLs for the corpus provisions.
+# Checked by `python -m solvemycase.data.ingestion.link_checker` (page title must be "Section N in <Act>").
+# Note: Indian Kanoon still shows the pre-2018 text of Specific Relief Act s.10; India Code has the current text.
+# Indian Kanoon has no section page for BNS s.318 (its BNS page parses it as a chapter heading), MVA s.199A (only
+# inside the s.199 area of its Act page) or TPA ss.107 and 123 (missing from its TPA page), so those deliberately
+# fall back to a law-scoped search link; do not map them to a whole-Act page.
 _DIRECT_INDIAN_KANOON_SECTION_URLS = {
     ("motor", "134"): "https://indiankanoon.org/doc/734786/",
+    ("motor", "147"): "https://indiankanoon.org/doc/87183818/",
+    ("motor", "150"): "https://indiankanoon.org/doc/185690380/",
     ("motor", "161"): "https://indiankanoon.org/doc/94760817/",
     ("motor", "165"): "https://indiankanoon.org/doc/69683245/",
     ("motor", "166"): "https://indiankanoon.org/doc/136948773/",
     ("motor", "185"): "https://indiankanoon.org/doc/139481594/",
     ("motor", "196"): "https://indiankanoon.org/doc/125316407/",
-    ("motor", "199A"): "https://indiankanoon.org/doc/785258/",
     ("nyaya", "106"): "https://indiankanoon.org/doc/158521871/",
-    ("nyaya", "147"): "https://indiankanoon.org/doc/89706772/",
-    ("nyaya", "149"): "https://indiankanoon.org/doc/62022797/",
+    ("nyaya", "190"): "https://indiankanoon.org/doc/53218156/",
+    ("nyaya", "191"): "https://indiankanoon.org/doc/175201984/",
     ("nyaya", "281"): "https://indiankanoon.org/doc/2500944/",
     ("nyaya", "316"): "https://indiankanoon.org/doc/90373646/",
-    ("nyaya", "318"): "https://indiankanoon.org/doc/149679501/",
     ("nyaya", "324"): "https://indiankanoon.org/doc/107231460/",
+    ("nyaya", "325"): "https://indiankanoon.org/doc/186696080/",
     ("nyaya", "351"): "https://indiankanoon.org/doc/196234891/",
     ("nyaya", "352"): "https://indiankanoon.org/doc/57413416/",
     ("suraksha", "173"): "https://indiankanoon.org/doc/165794322/",
@@ -187,22 +196,25 @@ _DIRECT_INDIAN_KANOON_SECTION_URLS = {
     ("property", "54"): "https://indiankanoon.org/doc/613871/",
     ("property", "55"): "https://indiankanoon.org/doc/1484775/",
     ("property", "106"): "https://indiankanoon.org/doc/80042/",
-    ("property", "107"): "https://indiankanoon.org/doc/515323/",
     ("property", "111"): "https://indiankanoon.org/doc/1134872/",
     ("property", "122"): "https://indiankanoon.org/doc/881325/",
-    ("property", "123"): "https://indiankanoon.org/doc/515323/",
     ("relief", "6"): "https://indiankanoon.org/doc/1773715/",
+    ("relief", "10"): "https://indiankanoon.org/doc/1805300/",
     ("relief", "16"): "https://indiankanoon.org/doc/1779540/",
     ("relief", "38"): "https://indiankanoon.org/doc/1474155/",
     ("relief", "39"): "https://indiankanoon.org/doc/1558146/",
+    ("animals", "11"): "https://indiankanoon.org/doc/1763700/",
     ("penal", "279"): "https://indiankanoon.org/doc/1270101/",
     ("penal", "304A"): "https://indiankanoon.org/doc/1371604/",
     ("criminal", "154"): "https://indiankanoon.org/doc/1980578/",
 }
 
-# Verified live DSpace 9.1 section handles on indiacode.gov.in
+# Verified live DSpace 9.1 section handles on indiacode.gov.in.
+# The repealed IPC and CrPC have no section-level records, so they link to the central record of the repealed Code.
 _DIRECT_INDIACODE_SECTION_URLS = {
     ("motor", "134"): "https://indiacode.gov.in/handle/123456789/523232",
+    ("motor", "147"): "https://indiacode.gov.in/handle/123456789/523247",
+    ("motor", "150"): "https://indiacode.gov.in/handle/123456789/523250",
     ("motor", "161"): "https://indiacode.gov.in/handle/123456789/523262",
     ("motor", "165"): "https://indiacode.gov.in/handle/123456789/523267",
     ("motor", "166"): "https://indiacode.gov.in/handle/123456789/523268",
@@ -210,12 +222,13 @@ _DIRECT_INDIACODE_SECTION_URLS = {
     ("motor", "196"): "https://indiacode.gov.in/handle/123456789/523303",
     ("motor", "199A"): "https://indiacode.gov.in/handle/123456789/538138",
     ("nyaya", "106"): "https://indiacode.gov.in/handle/123456789/545604",
-    ("nyaya", "147"): "https://indiacode.gov.in/handle/123456789/545857",
-    ("nyaya", "149"): "https://indiacode.gov.in/handle/123456789/545649",
+    ("nyaya", "190"): "https://indiacode.gov.in/handle/123456789/545864",
+    ("nyaya", "191"): "https://indiacode.gov.in/handle/123456789/545688",
     ("nyaya", "281"): "https://indiacode.gov.in/handle/123456789/545772",
     ("nyaya", "316"): "https://indiacode.gov.in/handle/123456789/545808",
     ("nyaya", "318"): "https://indiacode.gov.in/handle/123456789/545810",
     ("nyaya", "324"): "https://indiacode.gov.in/handle/123456789/545814",
+    ("nyaya", "325"): "https://indiacode.gov.in/handle/123456789/545816",
     ("nyaya", "351"): "https://indiacode.gov.in/handle/123456789/545840",
     ("nyaya", "352"): "https://indiacode.gov.in/handle/123456789/545841",
     ("suraksha", "173"): "https://indiacode.gov.in/handle/123456789/546648",
@@ -238,14 +251,18 @@ _DIRECT_INDIACODE_SECTION_URLS = {
     ("property", "122"): "https://indiacode.gov.in/handle/123456789/535303",
     ("property", "123"): "https://indiacode.gov.in/handle/123456789/535304",
     ("relief", "6"): "https://indiacode.gov.in/handle/123456789/524827",
+    ("relief", "10"): "https://indiacode.gov.in/handle/123456789/524831",
     ("relief", "16"): "https://indiacode.gov.in/handle/123456789/524838",
     ("relief", "38"): "https://indiacode.gov.in/handle/123456789/524862",
     ("relief", "39"): "https://indiacode.gov.in/handle/123456789/524863",
-    ("penal", "279"): "https://indiacode.gov.in/handle/123456789/549142",
-    ("penal", "304A"): "https://indiacode.gov.in/handle/123456789/549142",
+    ("animals", "11"): "https://indiacode.gov.in/handle/123456789/532762",
+    ("penal", "279"): "https://indiacode.gov.in/handle/123456789/488475",
+    ("penal", "304A"): "https://indiacode.gov.in/handle/123456789/488475",
     ("criminal", "154"): "https://indiacode.gov.in/handle/123456789/620185",
 }
 
+# Key phrases are matched as whole words in the lower-cased case title (so "nagaraja" does not match "Nagarajan").
+# Key on party names unique to the judgment: "animal welfare board" would also match other AWBI cases.
 _CURATED_PRECEDENT_URLS = {
     "patel roadways": "https://indiankanoon.org/doc/1907957/",
     "birla yamaha": "https://indiankanoon.org/doc/1907957/",
@@ -259,7 +276,25 @@ _CURATED_PRECEDENT_URLS = {
     "m.k. gupta": "https://indiankanoon.org/doc/1375046/",
     "experion developers": "https://indiankanoon.org/doc/71246029/",
     "sushma ashok shiroor": "https://indiankanoon.org/doc/71246029/",
+    "nagaraja": "https://indiankanoon.org/doc/39696860/",
 }
+
+# Direct-link map token -> (phrase that must appear in the cited Act name, the Act the token denotes); first match
+# wins. A cited name carrying a different year ("Consumer Protection Act, 1986", "Motor Vehicles (Amendment) Act,
+# 2019") gets no token, nor do generic word matches ("Motor Transport Workers Act", "Benami Property ..."), so the
+# UI never links a section of a different enactment. The link checker verifies each map entry against the Act.
+_ACT_LINK_TOKENS = {
+    "motor": ("motor vehicle", "Motor Vehicles Act, 1988"),
+    "nyaya": ("nyaya sanhita", "Bharatiya Nyaya Sanhita, 2023"),
+    "suraksha": ("nagarik suraksha", "Bharatiya Nagarik Suraksha Sanhita, 2023"),
+    "consumer": ("consumer protection", "Consumer Protection Act, 2019"),
+    "property": ("transfer of property", "Transfer of Property Act, 1882"),
+    "relief": ("specific relief", "Specific Relief Act, 1963"),
+    "animals": ("cruelty to animals", "Prevention of Cruelty to Animals Act, 1960"),
+    "penal": ("penal code", "Indian Penal Code, 1860"),
+    "criminal": ("criminal procedure", "Code of Criminal Procedure, 1973"),
+}
+_ACT_YEAR_RE = re.compile(r"\b(?:18|19|20)\d{2}\b")
 
 
 def clean_section_label(section_number: Optional[str]) -> str:
@@ -269,17 +304,18 @@ def clean_section_label(section_number: Optional[str]) -> str:
 
 
 def _resolve_act_section_key(act_name: Optional[str], section_number: Optional[str]):
-    act_lower = (act_name or "").lower()
+    """(direct-link map token or None, base section) for a cited Act and section: ('Section 2(11)' -> '2')."""
+    act_lower = " ".join((act_name or "").lower().split())
     sec_clean = clean_section_label(section_number)
     m = re.match(r"^(\d+[A-Za-z]?)", sec_clean)
     base_sec = m.group(1).upper() if m else sec_clean.upper()
 
-    act_token = None
-    for candidate in ("motor", "nyaya", "suraksha", "consumer", "property", "relief", "penal", "criminal"):
-        if candidate in act_lower:
-            act_token = candidate
-            break
-    return act_token, base_sec
+    cited_years = set(_ACT_YEAR_RE.findall(act_lower))
+    for token, (phrase, act) in _ACT_LINK_TOKENS.items():
+        if phrase in act_lower:
+            same_enactment = not cited_years or bool(cited_years & set(_ACT_YEAR_RE.findall(act)))
+            return (token if same_enactment else None), base_sec
+    return None, base_sec
 
 
 def safe_http_url(url: Optional[str]) -> Optional[str]:
@@ -343,7 +379,7 @@ def precedent_read_url(
     """Best link to read a judgment: curated landmark URL, verified source_url, or Indian Kanoon title search."""
     title_lower = " ".join((case_title or "").lower().split())
     for key_phrase, curated_url in _CURATED_PRECEDENT_URLS.items():
-        if key_phrase in title_lower:
+        if re.search(rf"(?<!\w){re.escape(key_phrase)}(?!\w)", title_lower):
             return curated_url
     safe_src = safe_http_url(source_url)
     if is_verified and safe_src:
