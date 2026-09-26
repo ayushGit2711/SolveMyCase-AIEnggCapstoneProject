@@ -16,21 +16,25 @@ RESULT_KEY = "help_result"
 
 
 def render_coverage_cards(store) -> None:
-    """Display the four problem categories handled by our live legal database."""
+    """Display the four problem categories handled by our live legal database in a balanced 2x2 grid."""
     cards = compute_domain_coverage_cards(store)
-    st.markdown("#### Problems we handle right now (from our live legal database)")
-    cols = st.columns(len(cards))
-    for col, card in zip(cols, cards):
-        with col:
-            with st.container(border=True):
-                st.markdown(f"**{escape_markdown(card['title'])}**")
-                st.caption(
-                    f"📚 **{card['statute_count']}** statutory sections · "
-                    f"**{card['precedent_count']}** SC judgment(s)"
-                )
-                st.markdown(escape_markdown(card["problems"]))
-                if card["acts_summary"]:
-                    st.caption(f"*Indexed Acts:* {escape_markdown(card['acts_summary'])}")
+    st.subheader("Problems we handle right now (from our live legal database)", anchor=False)
+    for idx in range(0, len(cards), 2):
+        row_cards = cards[idx : idx + 2]
+        cols = st.columns(2, gap="medium")
+        for col, card in zip(cols, row_cards):
+            with col:
+                with st.container(border=True):
+                    st.markdown(f"##### {escape_markdown(card['title'])}")
+                    st.caption(
+                        f"📚 **{card['statute_count']}** statutory sections · "
+                        f"⚖️ **{card['precedent_count']}** SC judgment(s)"
+                    )
+                    bullets = "\n".join(f"- {escape_markdown(item)}" for item in card["problems_list"])
+                    st.markdown(bullets)
+                    if card["act_badges"]:
+                        pills = " · ".join(f"`{b}`" for b in card["act_badges"])
+                        st.caption(f"**Indexed Acts:** {pills}")
 
 
 def render() -> None:
@@ -42,9 +46,11 @@ def render() -> None:
         "and by when**, citing only Indian laws and judgments from our database that apply to your facts."
     )
     render_coverage_cards(engines.store)
-    st.caption(f"**What we cover:** {escape_markdown(engines.proposed.coverage_summary())} {DISCLAIMER}")
+    with st.expander("📋 View full list of indexed Acts & out-of-coverage policy", expanded=False):
+        st.caption(f"**What we cover:** {escape_markdown(engines.proposed.coverage_summary())} {DISCLAIMER}")
 
     scenario = scenario_input(key_prefix="help", submit_label="Get my action plan")
+
 
     if scenario:
         try:

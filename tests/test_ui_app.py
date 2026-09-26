@@ -89,8 +89,14 @@ def _run_view(module_name: str) -> AppTest:
 
 
 def _all_text(at: AppTest) -> str:
-    parts = [e.value for e in at.markdown] + [e.value for e in at.caption] + [e.value for e in at.info]
+    parts = (
+        [e.value for e in at.subheader]
+        + [e.value for e in at.markdown]
+        + [e.value for e in at.caption]
+        + [e.value for e in at.info]
+    )
     return "\n".join(str(p) for p in parts)
+
 
 
 def test_entrypoint_renders_default_get_help_page():
