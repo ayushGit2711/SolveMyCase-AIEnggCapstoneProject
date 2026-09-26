@@ -305,5 +305,5 @@ Please read [`AGENTS.md`](AGENTS.md) (coding guidelines: zero assumptions, reuse
 
 ---
 
-Made by ❤️ (`<3`) by **"THE R.A.M.S"**
+Made with ❤️ by **the R.A.M.S**
 

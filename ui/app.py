@@ -30,7 +30,7 @@ from solvemycase.ui.views import benchmark, compare, get_help, how_it_works
 
 APP_TITLE = "SOLVE MY CASE"
 APP_TAGLINE = "Step-by-step action plans for everyday legal problems in India."
-APP_FOOTER = 'Made by ❤️ by "THE R.A.M.S"'
+APP_FOOTER = "Made with ❤️ by the R.A.M.S"
 
 st.set_page_config(
     page_title=APP_TITLE,
